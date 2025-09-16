@@ -1,5 +1,6 @@
 package com.myfinbank.entity;
 
+import aj.org.objectweb.asm.commons.Remapper;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -53,12 +54,15 @@ public class User {
     @Column(name = "RUOLO", length = 50)
     private String ruolo;
 
-    @ColumnDefault("1")
     @Column(name = "ENABLED")
-    private Boolean enabled;
+    private Boolean enabled = true;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "CREATED_AT")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Size(max = 100)
+    @NotNull
+    @Column(name = "USERNAME", nullable = false, length = 100)
+    private String username;
 
 }

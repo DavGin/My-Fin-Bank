@@ -6,18 +6,15 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "ACCOUNTS")
-public class Account {
+@Table(name = "CONTO")
+public class Conto {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
