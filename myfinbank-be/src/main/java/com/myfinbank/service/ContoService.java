@@ -3,6 +3,7 @@ package com.myfinbank.service;
 import com.myfinbank.dto.ContoDto;
 import com.myfinbank.entity.Conto;
 import com.myfinbank.entity.User;
+import com.myfinbank.exception.ResourceNotFoundException;
 import com.myfinbank.repository.ContoRepository;
 import com.myfinbank.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,8 @@ public class ContoService {
 
     @Transactional
     public ContoDto createConto(String username, ContoDto dto) {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato: " + username + ""));
         Conto acc = new Conto();
         acc.setUser(user);
         acc.setNome(dto.getNome());
@@ -37,7 +39,8 @@ public class ContoService {
 
     @Transactional(readOnly = true)
     public List<ContoDto> listConti(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato: " + username + ""));
         return contoRepository.findByUser(user)
                 .stream().map(ContoDto::fromEntity).collect(Collectors.toList());
     }

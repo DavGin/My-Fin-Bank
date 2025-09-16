@@ -4,6 +4,8 @@ import com.myfinbank.dto.ContoDto;
 import com.myfinbank.entity.User;
 import com.myfinbank.service.ContoService;
 import com.myfinbank.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/conti")
+@Tag(name = "Gestione conti", description = "Gestione dei conti associati all'utente")
 public class ContoController {
 
     private final ContoService service;
@@ -23,13 +26,15 @@ public class ContoController {
         this.userService = userService;
     }
 
-    @GetMapping
+    @GetMapping("/listaConti")
+    @Operation(summary = "Lista conti associati all'utente")
     public List<ContoDto> list(@AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getProfile(userDetails.getUsername());
         return service.listConti(user.getUsername());
     }
 
-    @PostMapping
+    @PostMapping("/createConto")
+    @Operation(summary = "Apri nuovo conto")
     public ResponseEntity<?> create(@AuthenticationPrincipal UserDetails userDetails,
                                     @Valid @RequestBody ContoDto dto) {
         service.createConto(userDetails.getUsername(), dto);
