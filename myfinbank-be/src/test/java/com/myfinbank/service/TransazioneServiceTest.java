@@ -56,6 +56,7 @@ class TransactionServiceTest {
 
         ContoDto conto = new ContoDto();
         conto.setNumeroConto("123456789");
+        conto.setIban("IT123456789012345678901234");
         conto.setTipo("CHECKING");
         conto.setValuta("EUR");
         conto.setSaldo(BigDecimal.valueOf(500));
@@ -89,6 +90,7 @@ class TransactionServiceTest {
         ContoDto conto2 = new ContoDto();
         conto2.setNumeroConto("1234567890");
         conto2.setTipo("CHECKING");
+        conto2.setIban("IT123456789012345678901235");
         conto2.setValuta("EUR");
         conto2.setSaldo(BigDecimal.valueOf(300));
         ContoDto savedConto2 = contoService.createConto(username, conto2);
@@ -112,6 +114,54 @@ class TransactionServiceTest {
                 .findFirst().orElseThrow();
         ContoDto updatedTarget = conti.stream()
                 .filter(a -> a.getNumeroConto().equals(savedConto2.getNumeroConto()))
+                .findFirst().orElseThrow();
+
+        assertThat(updatedSource.getSaldo()).isEqualByComparingTo("400");
+        assertThat(updatedTarget.getSaldo()).isEqualByComparingTo("400");
+    }
+
+
+    @Test
+    void testTransferBetweenDifferentUsers() {
+        // Creo un altro utente
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("other@example.com");
+        req.setPassword("Secret123");
+        req.setUsername("mariobianchi");
+        req.setNome("Mario");
+        req.setCognome("Bianchi");
+        req.setCodiceFiscale("ABC1234");
+        req.setDataNascita(LocalDate.of(1990, 1, 1));
+        authService.register(req);
+
+        // Creo conto destinatario
+        ContoDto conto3 = new ContoDto();
+        conto3.setNumeroConto("");
+        conto3.setTipo("CHECKING");
+        conto3.setIban("IT123456789012345678901235");
+        conto3.setValuta("EUR");
+        conto3.setSaldo(BigDecimal.valueOf(300));
+        ContoDto marioConto = contoService.createConto("mariobianchi", conto3);
+
+        // Bonifico 100€ verso Mario
+        TransazioneDto tx = new TransazioneDto();
+        tx.setTipoTransazione("BONIFICO");
+        tx.setImporto(BigDecimal.valueOf(100));
+        tx.setValuta("EUR");
+        tx.setDescrizione("Bonifico a Mario");
+        tx.setTargetIban(marioConto.getIban());
+
+        TransazioneDto savedTx = transazioneService.creaTransazione(numeroConto, tx);
+
+        assertThat(savedTx.getId()).isNotNull();
+
+        // Verifica saldi aggiornati
+        ContoDto updatedSource = contoService.listConti(username).stream()
+                .filter(a -> a.getNumeroConto().equals(numeroConto))
+                .findFirst().orElseThrow();
+
+        ContoDto updatedTarget = contoService.listConti("mariobianchi").stream()
+                .filter(a -> a.getNumeroConto().equals(marioConto.getNumeroConto()))
                 .findFirst().orElseThrow();
 
         assertThat(updatedSource.getSaldo()).isEqualByComparingTo("400");
