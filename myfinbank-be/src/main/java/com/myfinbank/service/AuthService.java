@@ -3,7 +3,9 @@ package com.myfinbank.service;
 import com.myfinbank.controller.AuthController;
 import com.myfinbank.dto.*;
 import com.myfinbank.entity.RefreshToken;
+import com.myfinbank.entity.Ruolo;
 import com.myfinbank.entity.User;
+import com.myfinbank.repository.RuoloRepository;
 import com.myfinbank.repository.UserRepository;
 import com.myfinbank.security.JwtTokenProvider;
 import org.slf4j.Logger;
@@ -27,17 +29,20 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final RuoloRepository ruoloRepository;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
                        JwtTokenProvider jwtTokenProvider,
-                       RefreshTokenService refreshTokenService) {
+                       RefreshTokenService refreshTokenService,
+                       RuoloRepository ruoloRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
+        this.ruoloRepository = ruoloRepository;
     }
 
     @Transactional
@@ -50,6 +55,8 @@ public class AuthService {
 
         User u = new User();
 
+        Ruolo ruolo = (Ruolo) ruoloRepository.findByNome("ROLE_USER").orElseThrow(() -> new RuntimeException("Ruolo non trovato"));
+
         u.setUsername(request.getUsername());
         u.setEmail(request.getEmail());
         u.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -57,7 +64,7 @@ public class AuthService {
         u.setCognome(request.getCognome());
         u.setCodiceFiscale(request.getCodiceFiscale());
         u.setDataNascita(request.getDataNascita());
-//        u.setRuol("USER");
+        u.setRuolo(ruolo);
         userRepository.save(u);
 
     }

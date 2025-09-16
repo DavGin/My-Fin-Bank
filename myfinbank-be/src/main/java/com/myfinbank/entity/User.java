@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -46,13 +47,9 @@ public class User {
     @Column(name = "DATA_NASCITA")
     private LocalDate dataNascita;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "USER_RUOLI",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "ruoli_id")
-    )
-    private Set<Ruolo> ruoli = new HashSet<>();
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ruolo_id", referencedColumnName = "ID", nullable = false)
+    private Ruolo ruolo;
 
     @Column(name = "ENABLED")
     private Boolean enabled = true;
