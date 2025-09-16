@@ -40,4 +40,19 @@ public class ContoController {
         service.createConto(userDetails.getUsername(), dto);
         return ResponseEntity.status(201).build();
     }
+
+    @GetMapping("/findByNumeroConto/{numeroConto}")
+    @Operation(summary = "Trova conto per numero")
+    public ResponseEntity<ContoDto> findByNumeroConto(@PathVariable String numeroConto) {
+        ContoDto conto = service.findByNumeroConto(numeroConto);
+        return ResponseEntity.ok(conto);
+    }
+
+    @PatchMapping("/chiudiConto/{numeroConto}")
+    @Operation(summary = "Chiudi un conto specifico")
+    public ResponseEntity<?> chiudiConto(@PathVariable String numeroConto) {
+        service.chiudiConto(numeroConto);
+        return ResponseEntity.ok().build();
+    }
+
 }

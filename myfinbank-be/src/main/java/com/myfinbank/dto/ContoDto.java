@@ -11,18 +11,20 @@ import java.math.BigDecimal;
 public class ContoDto {
 
     private Long id;
-    private String nome;
-    private String type;
-    private String currency;
-    private BigDecimal balance;
+    private String numeroConto;
+    private String tipo;
+    private String iban;
+    private String valuta;
+    private BigDecimal saldo;
 
-    public static ContoDto fromEntity(Conto acc) {
+    public static ContoDto fromEntity(Conto conto) {
         ContoDto dto = new ContoDto();
-        dto.setId(acc.getId());
-        dto.setNome(acc.getNome());
-        dto.setType(acc.getType());
-        dto.setCurrency(acc.getCurrency());
-        dto.setBalance(acc.getBalance());
+        dto.setId(conto.getId());
+        dto.setNumeroConto(conto.getNumeroConto());
+        dto.setTipo(conto.getTipo());
+        dto.setIban(conto.getIban());
+        dto.setValuta(conto.getValuta());
+        dto.setSaldo(conto.getSaldo());
         return dto;
     }
 }

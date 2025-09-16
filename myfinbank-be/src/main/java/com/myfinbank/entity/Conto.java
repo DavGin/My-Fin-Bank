@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "CONTO")
+@Table(name = "CONTI")
 public class Conto {
 
   @Id
@@ -27,23 +27,29 @@ public class Conto {
   private User user;
 
   @Size(max = 150)
-  @Column(name = "NOME", length = 150)
-  private String nome;
+  @Column(name = "NUMERO_CONTO", length = 150)
+  private String numeroConto;
+
+  @Size(max = 150)
+  @Column(name = "IBAN", length = 150)
+  private String iban;
 
   @Size(max = 50)
-  @Column(name = "\"TYPE\"", length = 50)
-  private String type;
+  @Column(name = "TIPO", length = 50)
+  private String tipo;
 
   @Size(max = 10)
-  @Column(name = "CURRENCY", length = 10)
-  private String currency;
+  @Column(name = "VALUTA", length = 10)
+  private String valuta;
 
   @ColumnDefault("0")
-  @Column(name = "BALANCE", precision = 19, scale = 2)
-  private BigDecimal balance;
+  @Column(name = "SALDO", precision = 19, scale = 2)
+  private BigDecimal saldo;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
-  @Column(name = "CREATED_AT")
-  private LocalDateTime createdAt;
+  @Column(name = "DATA_CREAZIONE")
+  private LocalDateTime dataCreation = LocalDateTime.now();
 
+  @Column(name = "DATA_CHIUSURA")
+  private LocalDateTime dataChiusura;
 }
