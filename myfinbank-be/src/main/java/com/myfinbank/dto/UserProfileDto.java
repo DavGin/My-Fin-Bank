@@ -11,6 +11,7 @@ import java.time.LocalDate;
 public class UserProfileDto {
 
     private Long id;
+    private String username;
     private String email;
     private String nome;
     private String cognome;
@@ -22,6 +23,7 @@ public class UserProfileDto {
     public static UserProfileDto fromEntity(User user) {
         UserProfileDto dto = new UserProfileDto();
         dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setNome(user.getNome());
         dto.setCognome(user.getCognome());

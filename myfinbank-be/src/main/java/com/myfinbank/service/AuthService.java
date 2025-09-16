@@ -57,7 +57,7 @@ public class AuthService {
         u.setCognome(request.getCognome());
         u.setCodiceFiscale(request.getCodiceFiscale());
         u.setDataNascita(request.getDataNascita());
-        u.setRuolo("USER");
+//        u.setRuol("USER");
         userRepository.save(u);
 
     }

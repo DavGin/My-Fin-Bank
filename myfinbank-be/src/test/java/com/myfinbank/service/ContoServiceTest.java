@@ -50,15 +50,15 @@ public class ContoServiceTest {
     @Test
     void testCreateAndListConti() {
         ContoDto acc = new ContoDto();
-        acc.setNome("Conto Principale");
-        acc.setType("CHECKING");
-        acc.setCurrency("EUR");
-        acc.setBalance(BigDecimal.valueOf(1000));
+        acc.setNumeroConto("1234698");
+        acc.setTipo("CHECKING");
+        acc.setValuta("EUR");
+        acc.setSaldo(BigDecimal.valueOf(1000));
 
         ContoDto saved = contoService.createConto(email, acc);
 
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getBalance()).isEqualByComparingTo("1000");
+        assertThat(saved.getSaldo()).isEqualByComparingTo("1000");
 
         List<ContoDto> conti = contoService.listConti(email);
         assertThat(conti).hasSize(1);

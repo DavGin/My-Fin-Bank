@@ -1,15 +1,15 @@
 package com.myfinbank.entity;
 
-import aj.org.objectweb.asm.commons.Remapper;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -46,10 +46,13 @@ public class User {
     @Column(name = "DATA_NASCITA")
     private LocalDate dataNascita;
 
-    @Size(max = 50)
-    @ColumnDefault("'USER'")
-    @Column(name = "RUOLO", length = 50)
-    private String ruolo;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "USER_RUOLI",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "ruoli_id")
+    )
+    private Set<Ruolo> ruoli = new HashSet<>();
 
     @Column(name = "ENABLED")
     private Boolean enabled = true;
