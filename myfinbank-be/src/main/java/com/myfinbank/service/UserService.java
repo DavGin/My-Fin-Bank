@@ -1,6 +1,5 @@
 package com.myfinbank.service;
 
-import com.myfinbank.dto.ContoDto;
 import com.myfinbank.dto.PasswordUpdateRequest;
 import com.myfinbank.dto.ProfileUpdateRequest;
 import com.myfinbank.dto.UserProfileDto;

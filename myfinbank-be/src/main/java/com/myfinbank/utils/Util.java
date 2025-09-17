@@ -1,5 +1,7 @@
 package com.myfinbank.utils;
 
+import java.util.stream.Collectors;
+
 public class Util {
 
     /**
@@ -63,4 +65,12 @@ public class Util {
         }
         return Integer.parseInt(remainder);
     }
+
+
+    public static String generateRandomNumericString(int length) {
+        return java.util.stream.IntStream.range(0, length)
+                .mapToObj(i -> String.valueOf((int) (Math.random() * 10)))
+                .collect(Collectors.joining());
+    }
+
 }

@@ -29,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // Crea una lista di Authorities
         List<SimpleGrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority(user.getRuolo().getName())
+                new SimpleGrantedAuthority(user.getRuolo())
         );
 
         // Costruisce l'oggetto UserDetails

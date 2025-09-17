@@ -1,13 +1,11 @@
 package com.myfinbank.service;
 
-import com.myfinbank.controller.AuthController;
 import com.myfinbank.dto.*;
 import com.myfinbank.entity.RefreshToken;
-import com.myfinbank.entity.Ruolo;
 import com.myfinbank.entity.User;
-import com.myfinbank.repository.RuoloRepository;
 import com.myfinbank.repository.UserRepository;
 import com.myfinbank.security.JwtTokenProvider;
+import com.myfinbank.utils.Ruoli;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,20 +27,18 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
-    private final RuoloRepository ruoloRepository;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
                        JwtTokenProvider jwtTokenProvider,
-                       RefreshTokenService refreshTokenService,
-                       RuoloRepository ruoloRepository) {
+                       RefreshTokenService refreshTokenService
+                        ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
-        this.ruoloRepository = ruoloRepository;
     }
 
     @Transactional
@@ -55,7 +51,10 @@ public class AuthService {
 
         User u = new User();
 
-        Ruolo ruolo = (Ruolo) ruoloRepository.findByNome("ROLE_USER").orElseThrow(() -> new RuntimeException("Ruolo non trovato"));
+        String ruolo = String.valueOf(Ruoli.USER);
+        if(ruolo == null) {
+            throw new IllegalStateException("Ruolo non trovato");
+        }
 
         u.setUsername(request.getUsername());
         u.setEmail(request.getEmail());

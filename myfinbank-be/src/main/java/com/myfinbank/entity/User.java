@@ -47,9 +47,8 @@ public class User {
     @Column(name = "DATA_NASCITA")
     private LocalDate dataNascita;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ruolo_id", referencedColumnName = "ID", nullable = false)
-    private Ruolo ruolo;
+    @Column(name = "RUOLO")
+    private String ruolo;
 
     @Column(name = "ENABLED")
     private Boolean enabled = true;
