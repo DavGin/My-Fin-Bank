@@ -9,13 +9,13 @@ public class AuthResponse {
     private String accessToken;
     private String refreshToken;
     private String tokenType = "Bearer";
-    private String email;
+    private String username;
 
     public AuthResponse() {}
 
-    public AuthResponse(String accessToken, String refreshToken, String email) {
+    public AuthResponse(String accessToken, String refreshToken, String username) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
-        this.email = email;
+        this.username = username;
     }
 }

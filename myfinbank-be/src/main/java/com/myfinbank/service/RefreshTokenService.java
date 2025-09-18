@@ -29,8 +29,8 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public RefreshToken createRefreshToken(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public RefreshToken createRefreshToken(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
         RefreshToken token = new RefreshToken();
         token.setUser(user);
         token.setExpiryDate(LocalDateTime.now().plusMinutes(refreshTokenDurationMs));
@@ -56,4 +56,5 @@ public class RefreshTokenService {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         return refreshTokenRepository.deleteByUser(user);
     }
+
 }

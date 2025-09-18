@@ -1,5 +1,6 @@
 package com.myfinbank.security;
 
+import com.myfinbank.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
@@ -13,11 +14,13 @@ import java.util.stream.Collectors;
 public class JwtTokenUtil {
 
     private static final String SECRET = "supersecretkeymysupersecurekeysupersecret";
-    private static final long EXPIRATION_MS = 3600_000; // 1h
+    private static final long EXPIRATION_MS = 15 * 60 * 1000; // 1h.
+    private static final long REFRESH_TOKEN = 7 * 24 * 60 * 60 * 1000; //.
+
 
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
-    public String generateToken(String username, Set<String> ruoli) {
+    public String generateToken(String username, String ruoli) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("ruoli", ruoli)
@@ -47,5 +50,15 @@ public class JwtTokenUtil {
 
     private Jws<Claims> parseClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+    }
+
+    public String refreshToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getUsername())
+                .claim("ruoli", user.getRuolo())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 }

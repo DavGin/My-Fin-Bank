@@ -5,6 +5,7 @@ import com.myfinbank.entity.RefreshToken;
 import com.myfinbank.entity.User;
 import com.myfinbank.repository.UserRepository;
 import com.myfinbank.security.JwtTokenProvider;
+import com.myfinbank.security.JwtTokenUtil;
 import com.myfinbank.utils.Ruoli;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -27,18 +31,20 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final JwtTokenUtil jwtTokenUtil;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
                        JwtTokenProvider jwtTokenProvider,
-                       RefreshTokenService refreshTokenService
-                        ) {
+                       RefreshTokenService refreshTokenService,
+                       JwtTokenUtil jwtTokenUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     @Transactional
@@ -68,43 +74,32 @@ public class AuthService {
 
     }
 
-    @Transactional
     public AuthResponse login(AuthRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+        // valida credenziali...
+        User user = userRepository.findByUsername(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+        long expirationMillis = Duration.ofMinutes(15).toMillis();
 
-        String accessToken = jwtTokenProvider.generateAccessToken(request.getUsername());
+        String accessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
+        String refreshToken = jwtTokenUtil.refreshToken(user); // 7 giorni
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalStateException("Utente autenticato non trovato"
-                ));
+        refreshTokenService.createRefreshToken(user.getUsername());
 
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
-
-        return new AuthResponse(accessToken, refreshToken.getToken(), user.getEmail());
+        return new AuthResponse(accessToken, refreshToken, user.getUsername());
     }
 
-    @Transactional
-    public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
+    public AuthResponse refreshAccessToken(String refreshToken) {
+        RefreshToken stored = refreshTokenService.findByToken(refreshToken)
+                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
-        String requestRefreshToken = request.getRefreshToken();
+        if (stored.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Refresh token expired");
+        }
 
-        RefreshTokenService rts = this.refreshTokenService;
-        Optional<RefreshToken> maybeToken = rts.findByToken(requestRefreshToken);
+        User user = stored.getUser();
+        String newAccessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
 
-        RefreshToken refreshToken = maybeToken.orElseThrow(() -> new IllegalArgumentException("Refresh token non trovato"));
-        rts.verifyExpiration(refreshToken);
-
-        Long userId = refreshToken.getUser().getId();
-        rts.deleteByUserId(userId);
-
-        RefreshToken newRefreshToken = rts.createRefreshToken(userId);
-
-        String username = refreshToken.getUser().getEmail();
-        String newAccessToken = jwtTokenProvider.generateAccessToken(username);
-
-        return new TokenRefreshResponse(newAccessToken, newRefreshToken.getToken());
+        return new AuthResponse(refreshToken, newAccessToken, user.getUsername());
     }
 
     @Transactional

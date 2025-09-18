@@ -7,8 +7,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,35 +41,44 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login utente e generazione token JWT")
-    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
-        logger.info("Tentativo di login per utente: {}", request.getUsername());
-        try {
-            AuthResponse resp = authService.login(request);
-            logger.info("Login riuscito per utente: {}", request.getUsername());
-            return ResponseEntity.ok(resp);
-        } catch (Exception ex) {
-            logger.warn("Login fallito per utente: {}, motivo: {}", request.getUsername(), ex.getMessage(), ex);
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        AuthResponse authResponse = authService.login(request);
+
+        // refreshToken come cookie HttpOnly
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(true) // in prod: solo HTTPS
+                .path("/api/auth/refresh") // cookie inviato solo a quell'endpoint
+                .sameSite("Strict")
+                .maxAge(Duration.ofDays(7))
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(Map.of(
+                        "accessToken", authResponse.getAccessToken(),
+                        "username", authResponse.getUsername()
+                ));
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Genera un nuovo access token tramite refresh token")
-    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
-        logger.info("Richiesta di refresh token per token: {}", request.getRefreshToken());
-        try {
-            TokenRefreshResponse resp = authService.refreshToken(request);
-            logger.info("Refresh token completato con successo");
-            return ResponseEntity.ok(resp);
-        } catch (IllegalArgumentException ex) {
-            logger.error("Errore durante il refresh token: {}", ex.getMessage(), ex);
-            return ResponseEntity.status(403).body(ex.getMessage());
-        } catch (RuntimeException ex) {
-            logger.error("Eccezione durante il refresh token: {}", ex.getMessage(), ex);
-            return ResponseEntity.status(403).body(ex.getMessage());
-        }
+    public ResponseEntity<?> refreshToken(@CookieValue("refreshToken") String refreshToken) {
+        AuthResponse newTokens = authService.refreshAccessToken(refreshToken);
+
+        // opzionale: rigenerare anche refreshToken e risettare il cookie
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newTokens.getRefreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/auth/refresh")
+                .sameSite("Strict")
+                .maxAge(Duration.ofDays(7))
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(Map.of("accessToken", newTokens.getAccessToken()));
     }
+
 
     @PostMapping("/logout")
     @Operation(summary = "Logout utente")
