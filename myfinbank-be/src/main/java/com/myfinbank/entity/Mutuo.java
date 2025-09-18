@@ -26,8 +26,7 @@ public class Mutuo {
     @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
 
-    @Column(name = "NUMERO_PRATICA", nullable = false, unique = true, length = 8
-    )
+    @Column(name = "NUMERO_PRATICA", nullable = false, unique = true, length = 8)
     private String numeroPratica;
 
     @Column(name = "IMPORTO", nullable = false)
