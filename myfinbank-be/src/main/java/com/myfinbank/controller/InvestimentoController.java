@@ -2,6 +2,8 @@ package com.myfinbank.controller;
 
 import com.myfinbank.dto.investimento.CreaInvestimentoDto;
 import com.myfinbank.dto.investimento.InvestimentoDto;
+import com.myfinbank.dto.investimento.ProiezioneInvestimentoDto;
+import com.myfinbank.dto.investimento.SimulazioneInvestimentoDto;
 import com.myfinbank.service.InvestimentoService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,5 +37,20 @@ public class InvestimentoController {
     @PreAuthorize("hasRole('USER')")
     public InvestimentoDto chiudiInvestimento(@PathVariable String identificativo) {
         return investimentoService.chiudiInvestimento(identificativo);
+    }
+
+    @GetMapping("/proiezioneInvestimento/{identificativo}/{anni}")
+    @PreAuthorize("hasRole('USER')")
+    public ProiezioneInvestimentoDto proiezioneInvestimento(
+            @PathVariable String identificativo ,
+            @RequestParam(defaultValue = "5") int anni
+    ) {
+        return investimentoService.proiezioneInvestimento(identificativo, anni);
+    }
+
+    @PostMapping("/simulaInvestimento")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ProiezioneInvestimentoDto simulaInvestimento(@Valid @RequestBody SimulazioneInvestimentoDto request) {
+        return investimentoService.simulaInvestimento(request);
     }
 }
