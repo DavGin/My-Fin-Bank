@@ -4,6 +4,7 @@ import type { Conto } from "../Conti/api.ts";
 export type Transazioni = {
     id: number;
     importo: number;
+    tipoTransazione: string
     descrizione: string;
     data: string;
 };
@@ -26,4 +27,32 @@ export async function fetchTransazioniByConto(numeroConto: string): Promise<Tran
         console.error("Errore durante il fetch delle transazioni:", error);
         throw error;
     }
+}
+
+
+export type CreateTransactionInput = {
+    id: number
+    importo: number
+    descrizione: string
+    data: string
+    tipoTransazione: 'BONIFICO' | 'VERSAMENTO' | 'PRELIEVO' | 'PAGAMENTO'
+    valuta: string,
+    dataTransazione: string,
+    numeroConto: string,
+    targetIban: string
+}
+
+
+export async function createTransazione(data: CreateTransactionInput): Promise<Transazioni> {
+    try {
+        console.log("Creazione transazione con data:", data);
+
+        const res = await axiosClient.post(`/v1/transazioni/creaTransazione`, data)
+        return res.data
+    }catch (error) {
+        console.error("Errore durante il fetch delle transazioni:", error);
+        throw error;
+
+    }
+
 }

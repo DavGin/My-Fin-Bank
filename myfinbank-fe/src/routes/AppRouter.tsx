@@ -9,6 +9,7 @@ import DashboardLayout from "../features/dashboard/DashboardLayout.tsx";
 import ContiPage from "../pages/Conti/ContiPage.tsx";
 import ProfilePage from "../pages/Profile/ProfilePage.tsx";
 import ContoDettaglioPage from "../pages/Conti/ContoDettaglioPage.tsx";
+import OperazioniPage from "../features/transazioni/OperazioniPage.tsx";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
     const token = useAppSelector(state => state.auth.accessToken)
@@ -44,6 +45,7 @@ export default function AppRouter() {
                     <Route index element={<DashboardPage />} />
                     <Route path="/conti" element={<ContiPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/operazioni" element={<OperazioniPage />} />
                 </Route>
                 <Route path="/" element={<Navigate to="/auth/login" replace />} />
             </Routes>

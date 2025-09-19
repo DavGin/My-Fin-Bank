@@ -28,7 +28,7 @@ const drawerWidth = 240
 const menuItems = [
     { label: 'Menu', path: '/', icon: <HomeIcon /> },
     { label: 'Conti', path: '/conti', icon: <AccountBalanceIcon /> },
-    { label: 'Transazioni', path: '/transactions', icon: <SwapHorizIcon /> },
+    { label: 'Operazioni', path: '/operazioni', icon: <SwapHorizIcon /> },
     { label: 'Mutui', path: '/loans', icon: <AssignmentIcon /> },
     { label: 'Investimenti', path: '/investments', icon: <SavingsIcon /> },
 
