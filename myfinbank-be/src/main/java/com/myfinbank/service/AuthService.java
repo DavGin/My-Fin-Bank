@@ -16,9 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -49,19 +47,20 @@ public class AuthService {
 
     @Transactional
     public void register(RegisterRequest request) {
+        logger.info("Avvio della registrazione per l'utente: {}", request.getUsername());
 
         if (userRepository.existsByEmail(request.getEmail())) {
             logger.warn("Registrazione fallita: email già in uso - {}", request.getEmail());
-            throw new IllegalArgumentException("Email già in uso: " + request.getEmail() + "");
+            throw new IllegalArgumentException("Email già in uso: " + request.getEmail());
         }
 
-        User u = new User();
-
-        String ruolo = String.valueOf(Ruoli.USER);
-        if(ruolo == null) {
+        String ruolo = request.isAdmin() ? String.valueOf(Ruoli.ADMIN) : String.valueOf(Ruoli.USER);
+        if (ruolo == null) {
+            logger.error("Ruolo non trovato durante la registrazione per l'utente: {}", request.getUsername());
             throw new IllegalStateException("Ruolo non trovato");
         }
 
+        User u = new User();
         u.setUsername(request.getUsername());
         u.setEmail(request.getEmail());
         u.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -70,47 +69,71 @@ public class AuthService {
         u.setCodiceFiscale(request.getCodiceFiscale());
         u.setDataNascita(request.getDataNascita());
         u.setRuolo(ruolo);
-        userRepository.save(u);
 
+        userRepository.save(u);
+        logger.info("Registrazione completata con successo per l'utente: {}", request.getUsername());
     }
 
     public AuthResponse login(AuthRequest request) {
-        // valida credenziali...
-        User user = userRepository.findByUsername(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
-        long expirationMillis = Duration.ofMinutes(15).toMillis();
+        logger.info("Tentativo di login per l'utente: {}", request.getUsername());
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> {
+                    logger.error("Utente non trovato durante il login: {}", request.getUsername());
+                    return new RuntimeException("Utente non trovato");
+                });
+
+        logger.info("Login riuscito per l'utente: {}", request.getUsername());
 
         String accessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
-        String refreshToken = jwtTokenUtil.refreshToken(user); // 7 giorni
+        String refreshToken = jwtTokenUtil.refreshToken(user);
 
         refreshTokenService.createRefreshToken(user.getUsername());
+        logger.info("Token di accesso e refresh generati per l'utente: {}", user.getUsername());
 
         return new AuthResponse(accessToken, refreshToken, user.getUsername());
     }
 
     public AuthResponse refreshAccessToken(String refreshToken) {
+        logger.info("Richiesta di refresh del token di accesso con il token di refresh: {}", refreshToken);
+
         RefreshToken stored = refreshTokenService.findByToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+                .orElseThrow(() -> {
+                    logger.error("Token di refresh non valido o inesistente: {}", refreshToken);
+                    return new RuntimeException("Invalid refresh token");
+                });
 
         if (stored.getExpiryDate().isBefore(LocalDateTime.now())) {
+            logger.warn("Token di refresh scaduto: {}", refreshToken);
             throw new RuntimeException("Refresh token expired");
         }
 
         User user = stored.getUser();
         String newAccessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
+        logger.info("Nuovo token di accesso generato per l'utente: {}", user.getUsername());
 
-        return new AuthResponse(refreshToken, newAccessToken, user.getUsername());
+        return new AuthResponse(newAccessToken, refreshToken, user.getUsername());
     }
 
     @Transactional
     public void logout(String refreshTokenString) {
+        logger.info("Richiesta di logout ricevuta per il token di refresh: {}", refreshTokenString);
+
         if (refreshTokenString == null || refreshTokenString.isBlank()) {
             logger.warn("Logout fallito: token di refresh assente o vuoto.");
             return;
         }
+
         Optional<RefreshToken> maybeToken = refreshTokenService.findByToken(refreshTokenString);
-        maybeToken.ifPresent(rt -> {
-            refreshTokenService.deleteByUserId(rt.getUser().getId());
-        });
+        if (maybeToken.isPresent()) {
+            refreshTokenService.deleteByUserId(maybeToken.get().getUser().getId());
+            logger.info("Logout avvenuto con successo per l'utente: {}", maybeToken.get().getUser().getUsername());
+        } else {
+            logger.warn("Token di refresh non trovato durante il logout: {}", refreshTokenString);
+        }
     }
 }

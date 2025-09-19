@@ -24,8 +24,9 @@ public class UserController {
         this.userService = userService;
     }
 
-    private User getCurrentUser(String username) {
-        User user = userService.getProfile(username);
+    private User getCurrentUser( UserDetails userDetails) {
+
+        User user = userService.getProfile(userDetails.getUsername());
         if (user == null) {
             throw new RuntimeException("Utente non trovato");
         }
@@ -36,7 +37,12 @@ public class UserController {
     @GetMapping("/profile")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public UserProfileDto getProfile(@AuthenticationPrincipal UserDetails userDetails) {
-        return UserProfileDto.fromEntity(userService.getProfile(getCurrentUser(String.valueOf(userDetails)).getUsername()));
+        if (userDetails == null) {
+            throw new RuntimeException("UserDetails è nullo nel SecurityContext");
+        }
+        User user = getCurrentUser(userDetails);
+        String username = user.getUsername();
+        return UserProfileDto.fromEntity(userService.getProfile(username));
     }
 
     // Accessibile SOLO agli admin
@@ -48,21 +54,28 @@ public class UserController {
 
 
     // ✏️ Aggiorna nome/cognome
-    @PutMapping
+    @PostMapping("/updateProfile")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public UserProfileDto updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ProfileUpdateRequest request) {
-        return UserProfileDto.fromEntity(userService.updateProfile(getCurrentUser(String.valueOf(userDetails)).getUsername(), request));
+        if (userDetails == null) {
+            throw new RuntimeException("UserDetails è nullo nel SecurityContext");
+        }
+        User user = getCurrentUser(userDetails);
+        String username = user.getUsername();
+        return UserProfileDto.fromEntity(userService.updateProfile(username, request));
     }
 
     // 🔑 Aggiorna password
-    @PutMapping("/password")
+    @PostMapping("/updatePassword")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public String updatePassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody PasswordUpdateRequest request) {
-        userService.updatePassword(getCurrentUser(String.valueOf(userDetails)).getUsername(), request);
+        User user = getCurrentUser(userDetails);
+        String username = user.getUsername();
+        userService.updatePassword(username, request);
         return "Password aggiornata con successo";
     }
 

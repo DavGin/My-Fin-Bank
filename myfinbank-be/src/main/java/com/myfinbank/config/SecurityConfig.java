@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -36,18 +37,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/favicon.ico").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    http.csrf(AbstractHttpConfigurer::disable) // Disabilita CSRF
+        .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Applica il bean CorsConfigurationSource
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configura sessioni stateless
+        .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/favicon.ico").permitAll() // Endpoint pubblici
+                .anyRequest().authenticated() // Tutte le altre richieste richiedono autenticazione
+        )
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Applica il filtro JWT
 
-        return http.build();
+    return http.build();
+}
 
-    }
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -73,6 +74,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of("http://localhost:5173")); // FE
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setExposedHeaders(List.of("Authorization")); // Utile se vuoi esporre header custom
         config.setAllowCredentials(true); // 🔑 fondamentale per cookie HttpOnly
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

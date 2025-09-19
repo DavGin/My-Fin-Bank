@@ -39,4 +39,6 @@ public class RegisterRequest {
     @NotNull
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataNascita;
+
+    private boolean isAdmin;
 }

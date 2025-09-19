@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,8 +36,12 @@ public class JwtTokenUtil {
     }
 
     public Set<String> getRuoli(String token) {
-        return ((java.util.List<String>) parseClaims(token).getBody().get("ruoli"))
-                .stream().collect(Collectors.toSet());
+        // Recupera il claim "ruoli" come stringa
+        String rolesString = (String) parseClaims(token).getBody().get("ruoli");
+
+        // Trasformiamo la stringa delimitata da virgole in un Set<String>
+        return Arrays.stream(rolesString.split(","))
+                .collect(Collectors.toSet());
     }
 
     public boolean validateToken(String token) {
