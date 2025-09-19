@@ -18,11 +18,10 @@ public class TransazioneController {
         this.transazioneService = transazioneService;
     }
 
-    @PostMapping("/creaTransazione/{numeroConto}")
+    @PostMapping("/creaTransazione")
     public ResponseEntity<TransazioneDto> creaTransazione(
-            @PathVariable String numeroConto,
             @Valid @RequestBody TransazioneDto transazioneDto) {
-        TransazioneDto nuovaTransazione = transazioneService.creaTransazione(numeroConto, transazioneDto);
+        TransazioneDto nuovaTransazione = transazioneService.creaTransazione(transazioneDto);
         return ResponseEntity.ok(nuovaTransazione);
     }
 

@@ -36,7 +36,7 @@ class TransactionServiceTest {
 
     private String email = "txuser@example.com";
     private String username = "lucabianchi";
-    private String numeroConto;
+    private String numeroConto= "00000000000";
 
     @BeforeEach
     void setup() {
@@ -75,7 +75,7 @@ class TransactionServiceTest {
         deposito.setDescrizione("Versamento stipendio");
 
 
-        TransazioneDto saved = transazioneService.creaTransazione(numeroConto, deposito);
+        TransazioneDto saved = transazioneService.creaTransazione(deposito);
 
         assertThat(saved.getId()).isNotNull();
 
@@ -103,7 +103,7 @@ class TransactionServiceTest {
         tx.setDescrizione("Bonifico verso conto2");
         tx.setTargetIban(savedConto2.getIban());
 
-        TransazioneDto savedTx = transazioneService.creaTransazione(numeroConto, tx);
+        TransazioneDto savedTx = transazioneService.creaTransazione(tx);
 
         assertThat(savedTx.getId()).isNotNull();
 
@@ -151,7 +151,7 @@ class TransactionServiceTest {
         tx.setDescrizione("Bonifico a Mario");
         tx.setTargetIban(marioConto.getIban());
 
-        TransazioneDto savedTx = transazioneService.creaTransazione(numeroConto, tx);
+        TransazioneDto savedTx = transazioneService.creaTransazione(tx);
 
         assertThat(savedTx.getId()).isNotNull();
 
