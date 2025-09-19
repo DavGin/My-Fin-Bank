@@ -13,18 +13,6 @@ export const authApi = {
                 throw err
             })
     },
-    register: (payload: any) => {
-        console.log('Effettuando registrazione con payload:', payload)
-        return api.post('/auth/register', payload)
-            .then(res => {
-                console.log('Risposta registrazione:', res.data)
-                return res.data
-            })
-            .catch(err => {
-                console.error('Errore registrazione:', err)
-                throw err
-            })
-    },
     refresh: () => {
         console.log('Effettuando richiesta di refresh token')
         return api.post('/auth/refresh')
@@ -47,10 +35,10 @@ export const authApi = {
         dataNascita: string
         isAdmin: boolean
     }) => {
-        console.log('Effettuando registrazione admin con payload:', payload)
+        console.log('Effettuando registrazione utente con payload:', payload)
         return api.post('/auth/register', payload)
             .then(res => {
-                console.log('Risultato registrazione admin:', res.data)
+                console.log('Risultato registrazione utente:', res.data)
                 return res.data
             })
             .catch(err => {
@@ -58,4 +46,17 @@ export const authApi = {
                 throw err
             })
     },
+    getProfile: () => {
+        console.log('Recupera utente')
+        return api.get('/api/v1/profile/profile', )
+            .then(res => {
+                console.log('Risultato registrazione utente:', res.data)
+                return res.data
+            })
+            .catch(err => {
+                console.error('Errore durante la registrazione admin:', err)
+                throw err
+            })
+    },
+
 }

@@ -33,23 +33,34 @@ export default function LoginPage() {
     const dispatch = useAppDispatch()
     const navigate = useNavigate()
 
-    // nuova sintassi React Query v5
     const mutation = useMutation<ResponseData, Error, FormData>({
-        mutationFn: (data: FormData) => authApi.login(data),
+        mutationFn: (data: FormData) => {
+            console.log('[LoginPage] Tentativo di login con i seguenti dati:', data)
+            return authApi.login(data)
+        },
         onSuccess: (data) => {
+            console.log('[LoginPage] Login riuscito. Dati restituiti:', data)
+
             const accessToken = data.accessToken || data.access_token || data.token
             const refreshToken = data.refreshToken || data.refresh_token
             const userFromBody = data.user || (data.username ? { username: data.username } : null)
 
             const user = userFromBody || { username: '' }
 
+            console.log('[LoginPage] Dati memorizzati nel Redux store:', { user, accessToken, refreshToken })
             dispatch(setCredentials({ user, accessToken, refreshToken }))
 
-            navigate('/dashboard') // Redirect dopo login
+            navigate('/')
+        },
+        onError: (error) => {
+            console.error('[LoginPage] Errore durante il login:', error)
         },
     })
 
-    const onSubmit = (data: FormData) => mutation.mutate(data)
+    const onSubmit = (data: FormData) => {
+        console.log('[LoginPage] Form inviato con dati:', data)
+        mutation.mutate(data)
+    }
 
     return (
         <Container maxWidth="sm">

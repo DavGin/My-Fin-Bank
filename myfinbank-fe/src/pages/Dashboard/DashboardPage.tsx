@@ -1,11 +1,18 @@
-import { Container, Typography } from '@mui/material'
-
+// src/features/dashboard/DashboardPage.tsx
+import { useAppSelector } from '../../app/hooks'
+import { Typography, Box } from '@mui/material'
 
 export default function DashboardPage() {
+    const user = useAppSelector(state => state.auth.user)
+
     return (
-        <Container>
-            <Typography variant="h4" sx={{ mt: 4 }}>Benvenuto in MyFinBank</Typography>
-            <Typography sx={{ mt: 2 }}>Questa è la Dashboard - aggiungi i widget qui.</Typography>
-        </Container>
+        <Box>
+            <Typography variant="h4" gutterBottom>
+                Benvenuto, {user?.nome} {user?.cognome}
+            </Typography>
+            <Typography variant="subtitle1">
+                Seleziona una sezione dal menu laterale.
+            </Typography>
+        </Box>
     )
 }
