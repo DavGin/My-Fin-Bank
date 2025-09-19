@@ -8,6 +8,7 @@ import UserRegisterPage from "../pages/Auth/UserRegisterPage.tsx";
 import DashboardLayout from "../features/dashboard/DashboardLayout.tsx";
 import ContiPage from "../pages/Conti/ContiPage.tsx";
 import ProfilePage from "../pages/Profile/ProfilePage.tsx";
+import ContoDettaglioPage from "../pages/Conti/ContoDettaglioPage.tsx";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
     const token = useAppSelector(state => state.auth.accessToken)
@@ -32,6 +33,14 @@ export default function AppRouter() {
                         </ProtectedRoute>
                     }
                 >
+                    <Route
+                        path="/conti/findByNumeroConto/:numeroConto"
+                        element={
+                            <ProtectedRoute>
+                                <ContoDettaglioPage />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route index element={<DashboardPage />} />
                     <Route path="/conti" element={<ContiPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
