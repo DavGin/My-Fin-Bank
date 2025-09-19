@@ -29,7 +29,8 @@ public class ContoController {
     @GetMapping("/listaConti")
     @Operation(summary = "Lista conti associati all'utente")
     public List<ContoDto> list(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getProfile(userDetails.getUsername());
+        String username = userDetails.getUsername();
+        User user = userService.getProfile(username);
         return service.listConti(user.getUsername());
     }
 
