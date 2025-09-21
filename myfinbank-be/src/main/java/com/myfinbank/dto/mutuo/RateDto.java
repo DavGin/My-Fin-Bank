@@ -16,5 +16,8 @@ public class RateDto {
     private BigDecimal interessi;
     private BigDecimal rataTotale;
     private BigDecimal saldoRimanente;
+    private String statoRata;
+
+
 
 }

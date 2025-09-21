@@ -4,6 +4,7 @@ package com.myfinbank.entity;
 import com.myfinbank.utils.StatoMutuo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,7 +27,7 @@ public class Mutuo {
     @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
 
-    @Column(name = "NUMERO_PRATICA", nullable = false, unique = true, length = 8)
+    @Column(name = "NUMERO_PRATICA", nullable = false, unique = true, length = 10)
     private String numeroPratica;
 
     @Column(name = "IMPORTO", nullable = false)

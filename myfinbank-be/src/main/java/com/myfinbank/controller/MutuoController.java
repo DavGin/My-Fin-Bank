@@ -3,6 +3,7 @@ package com.myfinbank.controller;
 
 import com.myfinbank.dto.mutuo.*;
 import com.myfinbank.service.MutuoService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,9 @@ public class MutuoController {
     @PostMapping("/createMutuo")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public MutuoRequestDto createMutuo(@Valid @RequestBody MutuoRequestCreateDto dto) {
-        return mutuoService.createMutuoRequest(dto);
+        MutuoRequestDto mutuoRequestDto = mutuoService.createMutuoRequest(dto);
+        mutuoService.calcolaRata(mutuoRequestDto.getNumeroPratica());
+        return mutuoRequestDto;
     }
 
     @GetMapping("/listMutuiUtente")
@@ -31,7 +34,7 @@ public class MutuoController {
         return mutuoService.listMutuiUtente();
     }
 
-    @GetMapping("/getMutuo/{id}")
+    @GetMapping("/getMutuo/{numeroPratica}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public MutuoRequestDto getMutuo(@PathVariable String numeroPratica) {
         return mutuoService.getMutuo(numeroPratica);
@@ -57,15 +60,38 @@ public class MutuoController {
         return mutuoService.getStoricoRegistroMutuo(numeroPratica);
     }
 
-    @GetMapping("/calcolaRata/{numeroPratica}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public List<RateDto> calcolaRata(@PathVariable String numeroPratica) {
-        return mutuoService.calcolaRata(numeroPratica);
+    @GetMapping("/getListaStoricoRegistroMutuo")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<RegistroMutuoDto> getListaStoricoRegistroMutuo() {
+        return mutuoService.getListaStoricoRegistroMutuo();
     }
+
+//    @GetMapping("/calcolaRata/{numeroPratica}")
+//    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+//    public List<RateDto> calcolaRata(@PathVariable String numeroPratica) {
+//        return mutuoService.calcolaRata(numeroPratica);
+//    }
 
     @PostMapping("/simulatoreMutuo")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public List<RateDto> simulatoreMutuo(@Valid @RequestBody SimulazioneMutuoDto request) {
         return mutuoService.simulatoreMutuo(request);
     }
+
+    @PostMapping("/pagaRata/{numeroPratica}/{numeroRata}/{numeroConto}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> pagaRata(
+            @PathVariable String numeroPratica,
+            @PathVariable int numeroRata,
+            @PathVariable String numeroConto) {
+        mutuoService.pagaRata(numeroPratica,numeroRata, numeroConto);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/findByNumeroPratica/{numeroPratica}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public List<RateDto> findByNumeroPratica(@PathVariable String numeroPratica) {
+        return mutuoService.findAllRatesByNumeroPraticaDto(numeroPratica);
+    }
+
 }

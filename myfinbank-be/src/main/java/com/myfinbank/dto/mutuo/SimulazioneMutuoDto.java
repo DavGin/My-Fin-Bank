@@ -17,7 +17,7 @@ public class SimulazioneMutuoDto {
 
     @NotNull
     @Min(1)
-    private Integer durateMesi;
+    private Integer durataMesi;
 
     @NotNull
     @Min(0)

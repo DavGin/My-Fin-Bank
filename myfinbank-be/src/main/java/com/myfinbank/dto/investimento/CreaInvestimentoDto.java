@@ -20,4 +20,7 @@ public class CreaInvestimentoDto {
 
     @NotNull
     private BigDecimal tassoRitornoPrevisto;
+
+    @NotNull
+    private int durataMesi;
 }

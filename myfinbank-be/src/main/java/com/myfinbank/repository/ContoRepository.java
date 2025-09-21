@@ -14,4 +14,6 @@ public interface ContoRepository extends JpaRepository<Conto, Long> {
     Optional<Conto> findByNumeroConto(String numeroConto);
 
     Optional<Conto> findByIban(String targetIban);
+
+    String numeroConto(String numeroConto);
 }
