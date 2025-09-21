@@ -1,7 +1,7 @@
 // src/features/operazioni/OperazioniPage.tsx
 import { useForm } from 'react-hook-form'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { createTransazione, type CreateTransactionInput } from './api'
+import { createTransazione, type CreateTransactionInput } from '../../features/transazioni/api.ts'
 import {
     Box,
     Typography,
@@ -11,7 +11,7 @@ import {
     Alert,
     CircularProgress,
 } from '@mui/material'
-import {fetchListaConti} from "../Conti/api.ts";
+import {fetchListaConti} from "../../features/Conti/api.ts";
 import {queryClient} from "../../queryClient.ts";
 
 type Props = { numeroConto: string }
@@ -110,7 +110,8 @@ export default function OperazioniPage({ numeroConto }: Props) {
                     <MenuItem value="BONIFICO">Bonifico</MenuItem>
                     <MenuItem value="VERSAMENTO">Versamento</MenuItem>
                     <MenuItem value="PRELIEVO">Prelievo</MenuItem>
-                    <MenuItem value="PAGAMENTO">Prelievo</MenuItem>
+                    <MenuItem value="RATA_MUTUO">Rata mutuo</MenuItem>
+                    <MenuItem value="DEPOSITO">Deposito</MenuItem>
                 </TextField>
                 <TextField
                     select
@@ -126,7 +127,7 @@ export default function OperazioniPage({ numeroConto }: Props) {
 
 
                 {/* IBAN destinatario: solo per BONIFICO */}
-                {tipo === 'BONIFICO' || tipo === 'PAGAMENTO' && (
+                {(tipo === 'BONIFICO' || tipo === 'PAGAMENTO') && (
                     <TextField
                         fullWidth
                         margin="normal"

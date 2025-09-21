@@ -6,7 +6,8 @@ export type Transazioni = {
     importo: number;
     tipoTransazione: string
     descrizione: string;
-    data: string;
+    dataTransazione: string;
+    direzione: string;
 };
 
 export async function fetchConto(numeroConto: string): Promise<Conto> {
@@ -35,7 +36,7 @@ export type CreateTransactionInput = {
     importo: number
     descrizione: string
     data: string
-    tipoTransazione: 'BONIFICO' | 'VERSAMENTO' | 'PRELIEVO' | 'PAGAMENTO'
+    tipoTransazione: 'BONIFICO' | 'VERSAMENTO' | 'PRELIEVO' | 'PAGAMENTO' |'RATA_MUTUO' | 'DEPOSITO'
     valuta: string,
     dataTransazione: string,
     numeroConto: string,

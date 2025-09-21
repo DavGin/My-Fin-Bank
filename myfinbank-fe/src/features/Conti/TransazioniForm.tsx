@@ -59,6 +59,7 @@ export default function TransactionForm({ numeroConto }: Props) {
                     <MenuItem value="VERSAMENTO">Versamento</MenuItem>
                     <MenuItem value="PAGAMENTO">Pagamento</MenuItem>
                     <MenuItem value="PRELIEVO">Prelievo</MenuItem>
+                    <MenuItem value="DEPOSITO">Deposito</MenuItem>
                 </TextField>
 
                 {mutation.isError && <Alert severity="error">Errore nella creazione</Alert>}
