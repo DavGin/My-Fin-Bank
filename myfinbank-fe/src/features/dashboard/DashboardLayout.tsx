@@ -31,7 +31,6 @@ const menuItems = [
     { label: 'Operazioni', path: '/operazioni', icon: <SwapHorizIcon /> },
     { label: 'Mutui', path: '/mutui', icon: <AssignmentIcon /> },
     { label: 'Investimenti', path: '/investimenti', icon: <SavingsIcon /> },
-    { label: 'Simulazione Investimenti', path: '/investimenti/simulazione', icon: <SavingsIcon /> },
 ]
 
 export default function DashboardLayout() {

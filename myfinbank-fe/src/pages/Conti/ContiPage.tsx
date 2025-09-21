@@ -12,7 +12,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Paper,
+    Paper, Button,
 } from '@mui/material'
 import ContoForm from "../../features/Conti/ContoFrom.tsx";
 import {useNavigate} from "react-router-dom";
@@ -70,6 +70,16 @@ export default function ContiPage() {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 2 }}>
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => navigate(-1)}
+                >
+                    Indietro
+                </Button>
+            </Box>
+
         </Box>
     )
 }
