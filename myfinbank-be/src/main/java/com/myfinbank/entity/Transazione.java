@@ -38,4 +38,7 @@ public class Transazione {
 
     @Column(name = "DESCRIZIONE", nullable = false)
     private String descrizione;
+
+    @Column(name = "DIREZIONE", nullable = false)
+    private String direzione;
 }

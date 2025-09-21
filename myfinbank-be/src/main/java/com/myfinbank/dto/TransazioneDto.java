@@ -18,6 +18,7 @@ public class TransazioneDto {
     private String descrizione;
     private String numeroConto;
     private String targetIban;
+    private String direzione; // "ENTRATA" | "USCITA"
 
     public static TransazioneDto fromEntity(Transazione tx) {
         TransazioneDto dto = new TransazioneDto();
@@ -28,6 +29,7 @@ public class TransazioneDto {
         dto.setDataTransazione(tx.getDataTransazione());
         dto.setDescrizione(tx.getDescrizione());
         dto.setNumeroConto(tx.getConto().getNumeroConto());
+        dto.setDirezione(tx.getDirezione());
         return dto;
     }
 }

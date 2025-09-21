@@ -6,6 +6,9 @@ import com.myfinbank.entity.Transazione;
 import com.myfinbank.exception.ResourceNotFoundException;
 import com.myfinbank.repository.ContoRepository;
 import com.myfinbank.repository.TransazioneRepository;
+import com.myfinbank.utils.DirezioneTransazione;
+import com.myfinbank.utils.TipoTransazione;
+import com.myfinbank.utils.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -65,22 +68,25 @@ public class TransazioneService {
         logger.info("Dettagli della transazione: Tipo: {}, Importo: {}, Valuta: {}",
                 dto.getTipoTransazione(), dto.getImporto(), dto.getValuta());
 
-        if ("DEPOSITO".equalsIgnoreCase(dto.getTipoTransazione())) {
+        if (TipoTransazione.DEPOSITO.name().equalsIgnoreCase(dto.getTipoTransazione())) {
             sorgente.setSaldo(sorgente.getSaldo().add(dto.getImporto()));
+            tx.setDirezione(DirezioneTransazione.ENTRATA.name());
             logger.info("Deposito effettuato. Nuovo saldo: {}", sorgente.getSaldo());
             contoRepository.save(sorgente);
-        } else if ("PRELIEVO".equalsIgnoreCase(dto.getTipoTransazione())) {
+        } else if (TipoTransazione.PRELIEVO.name().equalsIgnoreCase(dto.getTipoTransazione())) {
             if (sorgente.getSaldo().compareTo(dto.getImporto()) < 0) {
                 logger.error("Saldo insufficiente per prelievo. Saldo attuale: {}, Importo richiesto: {}",
                         sorgente.getSaldo(), dto.getImporto());
+                tx.setDirezione(DirezioneTransazione.USCITA.name());
                 throw new IllegalArgumentException("Saldo insufficiente per prelievo");
             }
             sorgente.setSaldo(sorgente.getSaldo().subtract(dto.getImporto()));
             logger.info("Prelievo effettuato. Nuovo saldo: {}", sorgente.getSaldo());
             contoRepository.save(sorgente);
-        } else if ("BONIFICO".equalsIgnoreCase(dto.getTipoTransazione()) || "PAGAMENTO".equalsIgnoreCase(dto.getTipoTransazione())) {
+        } else if (TipoTransazione.BONIFICO.name().equalsIgnoreCase(dto.getTipoTransazione()) || TipoTransazione.PAGAMENTO.name().equalsIgnoreCase(dto.getTipoTransazione())) {
             if (dto.getTargetIban() == null) {
                 logger.error("IBAN del destinatario mancante per il bonifico.");
+                tx.setDirezione(DirezioneTransazione.USCITA.name());
                 throw new IllegalArgumentException("Per un trasferimento è richiesto l'IBAN del destinatario");
             }
 
@@ -110,6 +116,8 @@ public class TransazioneService {
             contoRepository.save(sorgente);
             contoRepository.save(target);
 
+            tx.setDirezione(DirezioneTransazione.USCITA.name());
+
             logger.info("Bonifico completato con successo da {} a {}. Importo: {} {}",
                     sorgente.getNumeroConto(),
                     target.getNumeroConto(),
@@ -119,9 +127,10 @@ public class TransazioneService {
             // Registra transazione lato destinatario
             Transazione inEntrata = new Transazione();
             inEntrata.setConto(target);
-            inEntrata.setTipoTransazione("ENTRATA");
+            inEntrata.setTipoTransazione(dto.getTipoTransazione());
             inEntrata.setImporto(dto.getImporto());
             inEntrata.setValuta(dto.getValuta());
+            inEntrata.setDirezione(DirezioneTransazione.ENTRATA.name());
             inEntrata.setDescrizione("Bonifico ricevuto da " + sorgente.getUser().getNome() + " " + sorgente.getUser().getCognome() + " per " + dto.getDescrizione());
         
             logger.debug("Registrazione transazione in entrata per il destinatario {}", target.getNumeroConto());
