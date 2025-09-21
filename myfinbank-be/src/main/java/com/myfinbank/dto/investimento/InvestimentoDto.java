@@ -21,6 +21,7 @@ public class InvestimentoDto {
     private String statoInvestimento;
     private LocalDateTime dataInizio = LocalDateTime.now();
     private LocalDateTime dataFine;
+    private int mesi;
 
     public static InvestimentoDto fromEntity(Investimento inv){
         InvestimentoDto dto = new InvestimentoDto();
@@ -32,6 +33,7 @@ public class InvestimentoDto {
         dto.setStatoInvestimento(inv.getStatoInvestimento());
         dto.setDataInizio(inv.getDataInizio());
         dto.setDataFine(inv.getDataFine());
+        dto.setMesi(inv.getMesi());
         return dto;
     }
 }

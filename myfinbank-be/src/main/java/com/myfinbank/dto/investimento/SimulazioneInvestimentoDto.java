@@ -11,5 +11,5 @@ public class SimulazioneInvestimentoDto {
 
     private BigDecimal importoIniziale;
     private BigDecimal tassoPrevisto; // % annuo
-    private int anni;
+    private int mesi;
 }

@@ -1,9 +1,6 @@
 package com.myfinbank.service;
 
-import com.myfinbank.dto.investimento.CreaInvestimentoDto;
-import com.myfinbank.dto.investimento.InvestimentoDto;
-import com.myfinbank.dto.investimento.ProiezioneInvestimentoDto;
-import com.myfinbank.dto.investimento.SimulazioneInvestimentoDto;
+import com.myfinbank.dto.investimento.*;
 import com.myfinbank.entity.Investimento;
 import com.myfinbank.entity.User;
 import com.myfinbank.exception.ResourceNotFoundException;
@@ -18,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -45,6 +43,9 @@ public class InvestimentoService {
         inv.setTassoRitornoPrevisto(dto.getTassoRitornoPrevisto());
         inv.setStatoInvestimento(StatoInvestimento.ACTIVE.name());
         inv.setDataInizio(LocalDateTime.now());
+        inv.setDataFine(LocalDateTime.now().plusMonths(dto.getDurataMesi()));
+        inv.setMesi(dto.getDurataMesi());
+
 
         return InvestimentoDto.fromEntity(investimentoRepository.save(inv));
     }
@@ -71,7 +72,7 @@ public class InvestimentoService {
     }
 
     @Transactional(readOnly = true)
-    public ProiezioneInvestimentoDto proiezioneInvestimento(String identificativo, int anni) {
+    public ProiezioneInvestimentoDto proiezioneInvestimento(String identificativo, int mesi) {
         Investimento inv = investimentoRepository.findByIdentificativo(identificativo)
                 .orElseThrow(() -> new ResourceNotFoundException("Investimento " + identificativo + " non trovato"));
 
@@ -79,36 +80,65 @@ public class InvestimentoService {
         BigDecimal tasso = inv.getTassoRitornoPrevisto().divide(BigDecimal.valueOf(100)); // es. 5% → 0.05
 
         BigDecimal importoFinale = iniziale.multiply(
-                BigDecimal.valueOf(Math.pow(1 + tasso.doubleValue(), anni))
+                BigDecimal.valueOf(Math.pow(1 + tasso.doubleValue(), mesi))
         ).setScale(2, RoundingMode.HALF_UP);
 
-        ProiezioneInvestimentoDto dto = new ProiezioneInvestimentoDto();
-        dto.setImportoIniziale(iniziale);
-        dto.setTassoPrevisto(inv.getTassoRitornoPrevisto());
-        dto.setAnni(anni);
+        ProiezioneInvestimentoDto dto = ProiezioneInvestimentoDto.fromEntity(inv);
         dto.setImportoTotale(importoFinale);
+        return dto;
+
+    }
+
+    @Transactional(readOnly = true)
+    public SimulazioneInvestimentoOutputDto simulaInvestimento(SimulazioneInvestimentoDto request) {
+        BigDecimal importoIniziale = request.getImportoIniziale();
+        BigDecimal rate = request.getTassoPrevisto().divide(BigDecimal.valueOf(100));
+        int mesi = request.getMesi();
+
+        BigDecimal importoFinale = importoIniziale.multiply(
+                BigDecimal.valueOf(Math.pow(1 + rate.doubleValue(), mesi))
+        ).setScale(2, RoundingMode.HALF_UP);
+
+        SimulazioneInvestimentoOutputDto dto = new SimulazioneInvestimentoOutputDto();
+        dto.setImportoIniziale(importoIniziale);
+        dto.setTassoPrevisto(request.getTassoPrevisto());
+        dto.setMesi(mesi);
+        dto.setImportoFinale(importoFinale);
 
         return dto;
     }
 
     @Transactional(readOnly = true)
-    public ProiezioneInvestimentoDto simulaInvestimento(SimulazioneInvestimentoDto request) {
-        BigDecimal importoIniziale = request.getImportoIniziale();
-        BigDecimal rate = request.getTassoPrevisto().divide(BigDecimal.valueOf(100));
-        int anni = request.getAnni();
+    public List<RendimentoInvestimentoDto> getStoricoRendimenti(String numeroIdentificativo ) {
+        Investimento inv = investimentoRepository.findByIdentificativo(numeroIdentificativo)
+                .orElseThrow(() -> new ResourceNotFoundException("Investimento " + numeroIdentificativo + " non trovato"));
 
-        BigDecimal importoFinale = importoIniziale.multiply(
-                BigDecimal.valueOf(Math.pow(1 + rate.doubleValue(), anni))
-        ).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal importo = inv.getImportoInvestito();
+        BigDecimal tassoMensile = inv.getTassoRitornoPrevisto()
+                .divide(BigDecimal.valueOf(100 * 12), 10, RoundingMode.HALF_UP);
+        int mesi = inv.getMesi();
 
-        ProiezioneInvestimentoDto dto = new ProiezioneInvestimentoDto();
-        dto.setImportoIniziale(importoIniziale);
-        dto.setTassoPrevisto(request.getTassoPrevisto());
-        dto.setAnni(anni);
-        dto.setImportoTotale(importoFinale);
+        List<RendimentoInvestimentoDto> storico = new ArrayList<>();
+        BigDecimal valoreAttuale = importo;
 
-        return dto;
+        for (int i = 1; i <= mesi; i++) {
+            BigDecimal rendimento = valoreAttuale.multiply(tassoMensile).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal nuovoValore = valoreAttuale.add(rendimento).setScale(2, RoundingMode.HALF_UP);
+
+            String periodo = String.format("%d-%02d",
+                    inv.getDataInizio().getYear(),
+                    inv.getDataInizio().getMonthValue() + i > 12
+                            ? (inv.getDataInizio().getYear() + (inv.getDataInizio().getMonthValue() + i - 1) / 12)
+                            : inv.getDataInizio().getYear()
+            ) + "-" +
+                    String.format("%02d", ((inv.getDataInizio().getMonthValue() + i - 1) % 12) + 1);
+
+            storico.add(new RendimentoInvestimentoDto(periodo, valoreAttuale, rendimento, nuovoValore));
+
+            valoreAttuale = nuovoValore;
+        }
+
+        return storico;
     }
-
-
 }
+

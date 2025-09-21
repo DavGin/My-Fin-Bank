@@ -44,4 +44,7 @@ public class Investimento {
 
     @Column(name = "DATA_FINE", nullable = false)
     private LocalDateTime dataFine;
+
+    @Column(name = "DURATA_MESI", nullable = false)
+    private int mesi;
 }
