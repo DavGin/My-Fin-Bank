@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-interface User { nome: string; cognome: string; email: string; username: string;}
+interface User { nome: string; cognome: string; email: string; username: string; isAdmin: boolean;}
 interface AuthState { user: User | null; accessToken: string | null }
 
 const initialState: AuthState = {

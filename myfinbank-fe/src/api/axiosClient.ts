@@ -17,6 +17,7 @@ const log = (message: string, data?: any) => {
 
 // Add accessToken to every request
 api.interceptors.request.use((config) => {
+    console.log('Request data:', config.data) // Logga i dati della richiesta
     const state = store.getState()
     const token = state.auth.accessToken
     if (token) {
@@ -27,6 +28,7 @@ api.interceptors.request.use((config) => {
     }
     return config
 }, (error) => {
+    console.error('Request error:', error)
     log('Request error intercepted', error)
     return Promise.reject(error)
 })

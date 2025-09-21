@@ -1,5 +1,4 @@
-// src/features/dashboard/DashboardLayout.tsx
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, Link } from 'react-router-dom'
 import {
     Box,
     CssBaseline,
@@ -18,10 +17,11 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import SavingsIcon from '@mui/icons-material/Savings'
 import AssignmentIcon from '@mui/icons-material/Assignment'
 import LogoutIcon from '@mui/icons-material/Logout'
-import HomeIcon from '@mui/icons-material/Home';
+import HomeIcon from '@mui/icons-material/Home'
+import SecurityIcon from '@mui/icons-material/Security'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { logout } from '../auth/authSlice'
-import UserMenu from "../auth/UserMenu.tsx";
+import UserMenu from '../auth/UserMenu.tsx'
 
 const drawerWidth = 240
 
@@ -29,9 +29,9 @@ const menuItems = [
     { label: 'Menu', path: '/', icon: <HomeIcon /> },
     { label: 'Conti', path: '/conti', icon: <AccountBalanceIcon /> },
     { label: 'Operazioni', path: '/operazioni', icon: <SwapHorizIcon /> },
-    { label: 'Mutui', path: '/loans', icon: <AssignmentIcon /> },
-    { label: 'Investimenti', path: '/investments', icon: <SavingsIcon /> },
-
+    { label: 'Mutui', path: '/mutui', icon: <AssignmentIcon /> },
+    { label: 'Investimenti', path: '/investimenti', icon: <SavingsIcon /> },
+    { label: 'Simulazione Investimenti', path: '/investimenti/simulazione', icon: <SavingsIcon /> },
 ]
 
 export default function DashboardLayout() {
@@ -76,6 +76,7 @@ export default function DashboardLayout() {
                 <Toolbar />
                 <Box sx={{ overflow: 'auto' }}>
                     <List>
+                        {/* Loop sui menu */}
                         {menuItems.map((item) => (
                             <ListItem key={item.label} disablePadding>
                                 <ListItemButton onClick={() => navigate(item.path)}>
@@ -84,6 +85,15 @@ export default function DashboardLayout() {
                                 </ListItemButton>
                             </ListItem>
                         ))}
+                        {user?.isAdmin === true && (
+                            <ListItem disablePadding>
+                                <ListItemButton component={Link} to="/admin/mutui">
+                                    <ListItemIcon><SecurityIcon /></ListItemIcon>
+                                    <ListItemText primary="Gestione Mutui" />
+                                </ListItemButton>
+                            </ListItem>
+                        )}
+                        {/* Logout */}
                         <ListItem disablePadding>
                             <ListItemButton onClick={handleLogout}>
                                 <ListItemIcon><LogoutIcon /></ListItemIcon>
