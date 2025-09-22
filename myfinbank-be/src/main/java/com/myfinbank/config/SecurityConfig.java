@@ -1,5 +1,6 @@
 package com.myfinbank.config;
 
+import com.myfinbank.exception.CustomAccessDeniedHandler;
 import com.myfinbank.security.JwtAuthenticationFilter;
 import com.myfinbank.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -29,10 +31,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final AccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter, CustomUserDetailsService userDetailsService) {
+
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter, CustomUserDetailsService userDetailsService, CustomAccessDeniedHandler accessDeniedHandler
+                          ) {
         this.jwtFilter = jwtFilter;
         this.userDetailsService = userDetailsService;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -42,6 +48,7 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configura sessioni stateless
         .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/favicon.ico").permitAll() // Endpoint pubblici
+                .requestMatchers("/api/v1/**").hasAnyRole("USER", "ADMIN") // Accessibile da USER e ADMIN
                 .anyRequest().authenticated() // Tutte le altre richieste richiedono autenticazione
         )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Applica il filtro JWT

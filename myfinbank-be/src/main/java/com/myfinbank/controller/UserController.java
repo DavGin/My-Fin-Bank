@@ -6,6 +6,7 @@ import com.myfinbank.dto.UserProfileDto;
 import com.myfinbank.entity.User;
 import com.myfinbank.repository.UserRepository;
 import com.myfinbank.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,14 +37,15 @@ public class UserController {
     // Accessibile a tutti gli utenti autenticati
     @GetMapping("/profile")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public UserProfileDto getProfile(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<UserProfileDto> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            throw new RuntimeException("UserDetails è nullo nel SecurityContext");
+            throw new IllegalArgumentException("UserDetails è nullo nel SecurityContext");
         }
         User user = getCurrentUser(userDetails);
         String username = user.getUsername();
-        return UserProfileDto.fromEntity(userService.getProfile(username));
+        return ResponseEntity.ok().body(UserProfileDto.fromEntity(userService.getProfile(username)));
     }
+
 
     // Accessibile SOLO agli admin
     @GetMapping("/admin/users")

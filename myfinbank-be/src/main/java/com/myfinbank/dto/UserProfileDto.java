@@ -18,16 +18,18 @@ public class UserProfileDto {
     private String password;
     private String codiceFiscale;
     private LocalDate dataNascita;
-    private String role;
+    private String ruolo;
+
 
     public static UserProfileDto fromEntity(User user) {
         UserProfileDto dto = new UserProfileDto();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
+        dto.setPassword(user.getPassword());
         dto.setEmail(user.getEmail());
         dto.setNome(user.getNome());
         dto.setCognome(user.getCognome());
-        dto.setRole(user.getPassword());
+        dto.setRuolo(user.getRuolo());
         dto.setCodiceFiscale(user.getCodiceFiscale());
         dto.setDataNascita(user.getDataNascita());
         return dto;

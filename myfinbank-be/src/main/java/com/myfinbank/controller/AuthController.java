@@ -50,15 +50,14 @@ public class AuthController {
                 .secure(true) // in prod: solo HTTPS
                 .path("/api/auth/refresh") // cookie inviato solo a quell'endpoint
                 .sameSite("Strict")
-                .maxAge(Duration.ofDays(7))
+                .maxAge(Duration.ofMinutes(2))
                 .build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(Map.of(
                         "accessToken", authResponse.getAccessToken(),
-                        "username", authResponse.getUsername(),
-                        "role",authResponse.getRole()
+                        "username", authResponse.getUsername()
                 ));
     }
 
@@ -72,7 +71,7 @@ public class AuthController {
                 .secure(true)
                 .path("/api/auth/refresh")
                 .sameSite("Strict")
-                .maxAge(Duration.ofDays(7))
+                .maxAge(Duration.ofDays(2))
                 .build();
 
         return ResponseEntity.ok()

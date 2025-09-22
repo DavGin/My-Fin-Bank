@@ -95,7 +95,7 @@ public class AuthService {
         refreshTokenService.createRefreshToken(user.getUsername());
         logger.info("Token di accesso e refresh generati per l'utente: {}", user.getUsername());
 
-        return new AuthResponse(accessToken, refreshToken, user.getUsername(), user.getRuolo());
+        return new AuthResponse(accessToken, refreshToken, user.getUsername());
     }
 
     public AuthResponse refreshAccessToken(String refreshToken) {
@@ -116,7 +116,7 @@ public class AuthService {
         String newAccessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
         logger.info("Nuovo token di accesso generato per l'utente: {}", user.getUsername());
 
-        return new AuthResponse(newAccessToken, refreshToken, user.getUsername(), user.getRuolo());
+        return new AuthResponse(newAccessToken, refreshToken, user.getUsername());
     }
 
     @Transactional
