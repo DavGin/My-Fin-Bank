@@ -56,7 +56,7 @@ public class MutuoController {
 
     @GetMapping("/getStoricoRegistroMutuo/{numeroPratica}")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<MutuoRequestDto> getStoricoRegistroMutuo(@PathVariable String numeroPratica) {
+    public MutuoRequestDto getStoricoRegistroMutuo(@PathVariable String numeroPratica) {
         return mutuoService.getStoricoRegistroMutuo(numeroPratica);
     }
 

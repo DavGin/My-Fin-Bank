@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface MutuoRepository extends JpaRepository<Mutuo, Long> {
 
-    List<Mutuo> findByMutuo(Mutuo mutuo);
-
     List<Mutuo> findByUser(User user);
 
     Mutuo findByNumeroPratica(String numeroPratica);

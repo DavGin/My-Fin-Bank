@@ -122,15 +122,8 @@ public class MutuoService {
     }
 
     @Transactional(readOnly = true)
-    public List<MutuoRequestDto> getStoricoRegistroMutuo(String numeroPratica ) {
-        Mutuo mutuo = mutuoRepository.findByNumeroPratica(numeroPratica);
-        if (mutuo == null) {
-            throw new ResourceNotFoundException("Mutuo numero " + numeroPratica + " non trovato");
-        }
-        return mutuoRepository.findByMutuo(mutuo)
-                .stream()
-                .map(MutuoRequestDto::fromEntity)
-                .toList();
+    public MutuoRequestDto getStoricoRegistroMutuo(String numeroPratica ) {
+        return MutuoRequestDto.fromEntity(mutuoRepository.findByNumeroPratica(numeroPratica));
     }
 
     @Transactional(readOnly = true)
