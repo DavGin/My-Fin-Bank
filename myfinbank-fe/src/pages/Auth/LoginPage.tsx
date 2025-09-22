@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 // form type: email + password
-type FormData = { username: string; password: string }
+type FormData = { username: string; password: string; role: string; }
 
 type ResponseData = {
     username?: string
@@ -26,6 +26,8 @@ type ResponseData = {
     refreshToken?: string
     refresh_token?: string
     user?: { username: string; }
+    role?: string
+    ruolo?: string
 }
 
 export default function LoginPage() {
@@ -43,14 +45,19 @@ export default function LoginPage() {
 
             const accessToken = data.accessToken || data.access_token || data.token
             const refreshToken = data.refreshToken || data.refresh_token
-            const userFromBody = data.user || (data.username ? { username: data.username } : null)
+            const userFromBody = data.user || 
+                (data.username ? { username: data.username, ruolo: data.role || data.ruolo } : null)
 
-            const user = userFromBody || { username: '' }
+            const user = userFromBody || { username: '', ruolo: '' }
 
             console.log('[LoginPage] Dati memorizzati nel Redux store:', { user, accessToken, refreshToken })
             dispatch(setCredentials({ user, accessToken, refreshToken }))
+            console.log('----> ', user.ruolo)
+            if(user?.ruolo=== 'ADMIN')
 
-            navigate('/')
+                navigate('/admin/dashboard')
+            else
+                navigate('/')
         },
         onError: (error) => {
             console.error('[LoginPage] Errore durante il login:', error)

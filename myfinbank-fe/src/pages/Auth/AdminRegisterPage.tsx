@@ -22,8 +22,9 @@ type RegisterFormData = {
     isAdmin: boolean
 }
 
+
 export default function AdminRegisterPage() {
-    const { control, handleSubmit } = useForm<RegisterFormData>({
+    const { register, control, handleSubmit } = useForm<RegisterFormData>({
         defaultValues: { isAdmin: true }, // Ruolo admin impostato a "true"
     })
     const navigate = useNavigate()
@@ -41,6 +42,9 @@ export default function AdminRegisterPage() {
     })
 
     const onSubmit = (formData: RegisterFormData) => {
+        formData.isAdmin = true;
+        console.log('[AdminRegisterPage] Form inviato con dati:', formData)
+
         mutation.mutate(formData)
     }
 
@@ -137,6 +141,7 @@ export default function AdminRegisterPage() {
                             {(mutation.error as any)?.response?.data?.message || 'Si è verificato un errore durante la registrazione'}
                         </Alert>
                     )}
+                    <input type="hidden" value="true" {...register('isAdmin')} />
 
                     <Button
                         type="submit"

@@ -8,7 +8,8 @@ export type Profile = {
     cognome: string;
     codiceFiscale: string
     dataNascita: string;
-
+    isAdmin: boolean;
+    ruolo: string;
 }
 
 export async function getProfile(): Promise<Profile> {

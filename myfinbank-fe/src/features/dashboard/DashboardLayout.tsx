@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, Link } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import {
     Box,
     CssBaseline,
@@ -25,13 +25,20 @@ import UserMenu from '../auth/UserMenu.tsx'
 
 const drawerWidth = 240
 
-const menuItems = [
+const userMenuItems = [
     { label: 'Menu', path: '/', icon: <HomeIcon /> },
     { label: 'Conti', path: '/conti', icon: <AccountBalanceIcon /> },
     { label: 'Operazioni', path: '/operazioni', icon: <SwapHorizIcon /> },
     { label: 'Mutui', path: '/mutui', icon: <AssignmentIcon /> },
     { label: 'Investimenti', path: '/investimenti', icon: <SavingsIcon /> },
 ]
+
+const adminMenuItems = [
+    { label: 'Dashboard Admin', path: '/admin/dashboard', icon: <HomeIcon /> },
+    { label: 'Gestione Mutui', path: '/admin/mutui', icon: <SecurityIcon /> },
+    { label: 'Profilo', path: '/profile', icon: <AccountBalanceIcon /> },
+]
+
 
 export default function DashboardLayout() {
     const navigate = useNavigate()
@@ -42,6 +49,9 @@ export default function DashboardLayout() {
         dispatch(logout())
         navigate('/login')
     }
+
+    const menuItems = user?.ruolo === 'ADMIN' ? adminMenuItems : userMenuItems
+
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -75,6 +85,7 @@ export default function DashboardLayout() {
                 <Toolbar />
                 <Box sx={{ overflow: 'auto' }}>
                     <List>
+
                         {/* Loop sui menu */}
                         {menuItems.map((item) => (
                             <ListItem key={item.label} disablePadding>
@@ -84,14 +95,7 @@ export default function DashboardLayout() {
                                 </ListItemButton>
                             </ListItem>
                         ))}
-                        {user?.isAdmin === true && (
-                            <ListItem disablePadding>
-                                <ListItemButton component={Link} to="/admin/mutui">
-                                    <ListItemIcon><SecurityIcon /></ListItemIcon>
-                                    <ListItemText primary="Gestione Mutui" />
-                                </ListItemButton>
-                            </ListItem>
-                        )}
+
                         {/* Logout */}
                         <ListItem disablePadding>
                             <ListItemButton onClick={handleLogout}>

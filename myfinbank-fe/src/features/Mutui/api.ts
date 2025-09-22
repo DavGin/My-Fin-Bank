@@ -120,25 +120,20 @@ export async function getMutuo(numeroPratica: string): Promise<MutuoRequestDto> 
     return res.data
 }
 
-export async function approvaMutuo(
-    numeroPratica: string,
-    newStato: string,
+
+export interface EsitoMutuoDto{
+    numeroPratica: string
+    newStato: string
     motivo: string
-): Promise<MutuoRequestDto> {
-    const res = await axiosClient.put(
-        `/v1/mutui/approvaMutuo/${numeroPratica}/${newStato}/${encodeURIComponent(motivo)}`
-    )
+}
+
+export async function approvaMutuo( data: EsitoMutuoDto): Promise<EsitoMutuoDto[]> {
+    const res = await axiosClient.post(`/v1/mutui/approvaMutuo`, data)
     return res.data
 }
 
-export async function rejectMutuo(
-    numeroPratica: string,
-    newStato: string,
-    motivo: string
-): Promise<MutuoRequestDto> {
-    const res = await axiosClient.put(
-        `/v1/mutui/rejectMutuo/${numeroPratica}/${newStato}/${encodeURIComponent(motivo)}`
-    )
+export async function rejectMutuo(data: EsitoMutuoDto): Promise<EsitoMutuoDto[]> {
+    const res = await axiosClient.post(`/v1/mutui/rejectMutuo`, data)
     return res.data
 }
 
@@ -149,7 +144,7 @@ export async function getStoricoRegistroMutuo(
     return res.data
 }
 
-export async function getListaStoricoRegistroMutuo(): Promise<RegistroMutuoDto[]> {
+export async function getListaStoricoRegistroMutuo(): Promise<MutuoRequestDto[]> {
     const res = await axiosClient.get(`/v1/mutui/getListaStoricoRegistroMutuo`)
     return res.data
 }

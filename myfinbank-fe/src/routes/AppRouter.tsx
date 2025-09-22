@@ -17,6 +17,7 @@ import MutuoSimulationPage from "../pages/Mutui/MutuoSimulationPage.tsx";
 import InvestimentiPage from "../pages/Investimenti/InvestimentiPage.tsx";
 import InvestimentoDetailPage from "../pages/Investimenti/InvestimentoDetailsPage.tsx";
 import SimulazioneInvestimentoPage from "../pages/Investimenti/InvestimentiSimulationPage.tsx";
+import AdminDashboardPage from "../pages/Dashboard/AdminDashboardPage.tsx";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
     const token = useAppSelector(state => state.auth.accessToken)
@@ -24,6 +25,16 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 
     return children
 }
+function AdminProtectedRoute({ children }: { children: JSX.Element }) {
+    const token = useAppSelector(state => state.auth.accessToken)
+    const user = useAppSelector(state => state.auth.user)
+
+    // Controllo: l'utente deve essere loggato e deve essere admin
+    if (!token || user?.ruolo !== 'ADMIN') return <Navigate to="/auth/login" replace />
+
+    return children
+}
+
 
 export default function AppRouter() {
     return (
@@ -32,7 +43,7 @@ export default function AppRouter() {
                 <Route path="/auth/login" element={<LoginPage />} />
                 <Route path="/" element={<Navigate to="/auth/login" replace />} />
                 <Route path="/auth/register" element={<UserRegisterPage />} />
-                <Route path="/auth/admin/register" element={<AdminRegisterPage />} />
+                <Route path="/auth/admin-register" element={<AdminRegisterPage />} />
                 <Route
                     path="/"
                     element={
@@ -60,6 +71,17 @@ export default function AppRouter() {
                     <Route path="/investimenti" element={<InvestimentiPage />} />
                     <Route path="investimenti/:identificativo/:durataMesi" element={<InvestimentoDetailPage />} />
                     <Route path="/investimenti/simulazione" element={<SimulazioneInvestimentoPage />} />
+                    {/* Rotta protetta per admin */}
+                    <Route
+                        path="/admin/dashboard"
+                        element={
+                            <AdminProtectedRoute>
+                                <AdminDashboardPage />
+                            </AdminProtectedRoute>
+                        }
+                    />
+                    <Route path="/admin/mutui/AdminMutuiPage" element={<AdminMutuiPage />} />
+
                 </Route>
                 <Route path="/" element={<Navigate to="/auth/login" replace />} />
             </Routes>

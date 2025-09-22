@@ -1,7 +1,7 @@
 import api from './axiosClient'
 
 export const authApi = {
-    login: (payload: { username: string; password: string }) => {
+    login: (payload: { username: string; password: string; ruolo:string }) => {
         console.log('Effettuando login con:', payload)
         return api.post('/auth/login', payload)
             .then(res => {
@@ -34,6 +34,7 @@ export const authApi = {
         codiceFiscale: string
         dataNascita: string
         isAdmin: boolean
+        ruolo: string
     }) => {
         console.log('Effettuando registrazione utente con payload:', payload)
         return api.post('/auth/register', payload)

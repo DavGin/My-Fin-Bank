@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchAllMutui, approvaMutuo, rigiutaMutuo } from '../../features/Mutui/api'
+import {fetchAllMutui, approvaMutuo, type EsitoMutuoDto, rejectMutuo} from '../../features/Mutui/api'
 import type { Mutuo } from '../../features/Mutui/api'
 import {
     Box,
@@ -25,19 +25,32 @@ export default function AdminMutuiPage() {
     })
 
     const mutation = useMutation({
-        mutationFn: async ({ id, stato }: { id: number; stato: 'APPROVATO' | 'RIFIUTATO' }) => {
-            const motivo = stato === 'RIFIUTATO' ? 'Motivo del rifiuto.' : 'Motivo dell’approvazione.'
-            
+        mutationFn: async ({ numeroPratica, stato }: { numeroPratica: string; stato: 'APPROVATO' | 'RIFIUTATO' }) => {
+            const motivo = stato === 'RIFIUTATO'
+                ? 'Motivo del rifiuto.'
+                : 'Motivo dell’approvazione.'
+
             if (stato === 'APPROVATO') {
-                return approvaMutuo(id.toString(), stato, motivo)
+                const data: EsitoMutuoDto = {
+                    numeroPratica: numeroPratica,
+                    newStato: stato,
+                    motivo,
+                }
+                return approvaMutuo(data)
             } else if (stato === 'RIFIUTATO') {
-                return rigiutaMutuo(id.toString(), stato, motivo)
+                const data: EsitoMutuoDto = {
+                    numeroPratica: numeroPratica,
+                    newStato: 'RIFIUTATA', // correzione dello stato
+                    motivo,
+                }
+                return rejectMutuo(data)
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['mutui-admin'] })
+            queryClient.invalidateQueries({ queryKey: ['mutui-admin'] }) // Aggiorniamo la cache
         },
     })
+
 
     if (isLoading) return <CircularProgress />
     if (isError) return <Alert severity="error">Errore caricamento mutui</Alert>
@@ -73,14 +86,14 @@ export default function AdminMutuiPage() {
                                 <TableCell>{m.tassoInteresse}%</TableCell>
                                 <TableCell>{m.stato}</TableCell>
                                 <TableCell>
-                                    {m.stato === 'IN_APPROVAZIONE' && (
+                                    {m.stato === 'PENDING' && (
                                         <>
                                             <Button
                                                 variant="contained"
                                                 color="success"
                                                 size="small"
                                                 sx={{ mr: 1 }}
-                                                onClick={() => mutation.mutate({ id: m.id, stato: 'APPROVATO' })}
+                                                onClick={() => mutation.mutate({ numeroPratica: m.numeroPratica, stato: 'APPROVATO' })}
                                             >
                                                 Approva
                                             </Button>
@@ -88,7 +101,7 @@ export default function AdminMutuiPage() {
                                                 variant="contained"
                                                 color="error"
                                                 size="small"
-                                                onClick={() => mutation.mutate({ id: m.id, stato: 'RIFIUTATO' })}
+                                                onClick={() => mutation.mutate({ numeroPratica: m.numeroPratica, stato: 'RIFIUTATO' })}
                                             >
                                                 Rifiuta
                                             </Button>

@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-interface User { nome: string; cognome: string; email: string; username: string; isAdmin: boolean;}
+interface User { nome: string; cognome: string; email: string; username: string; isAdmin: boolean; ruolo: string;}
 interface AuthState { user: User | null; accessToken: string | null }
 
 const initialState: AuthState = {
@@ -17,6 +17,7 @@ const authSlice = createSlice({
         setCredentials(state, action: PayloadAction<{ user: User; accessToken: string }>) {
             state.user = action.payload.user
             state.accessToken = action.payload.accessToken
+            state.user.ruolo = action.payload.user.ruolo
             localStorage.setItem('accessToken', action.payload.accessToken)
         },
         setUser(state, action: PayloadAction<User>) {
