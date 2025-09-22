@@ -1,12 +1,16 @@
 package com.myfinbank.repository;
 
+import com.myfinbank.dto.mutuo.MutuoRequestDto;
 import com.myfinbank.entity.Mutuo;
 import com.myfinbank.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface MutuoRepository extends JpaRepository<Mutuo, Long> {
+
+    List<Mutuo> findByMutuo(Mutuo mutuo);
 
     List<Mutuo> findByUser(User user);
 

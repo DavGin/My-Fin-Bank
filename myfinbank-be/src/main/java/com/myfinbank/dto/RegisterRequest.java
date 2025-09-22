@@ -40,5 +40,6 @@ public class RegisterRequest {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataNascita;
 
-    private boolean isAdmin;
+    private Boolean isAdmin;
+
 }

@@ -54,7 +54,7 @@ public class AuthService {
             throw new IllegalArgumentException("Email già in uso: " + request.getEmail());
         }
 
-        String ruolo = request.isAdmin() ? String.valueOf(Ruoli.ADMIN) : String.valueOf(Ruoli.USER);
+        String ruolo = request.getIsAdmin() ? String.valueOf(Ruoli.ADMIN) : String.valueOf(Ruoli.USER);
         if (ruolo == null) {
             logger.error("Ruolo non trovato durante la registrazione per l'utente: {}", request.getUsername());
             throw new IllegalStateException("Ruolo non trovato");
@@ -95,7 +95,7 @@ public class AuthService {
         refreshTokenService.createRefreshToken(user.getUsername());
         logger.info("Token di accesso e refresh generati per l'utente: {}", user.getUsername());
 
-        return new AuthResponse(accessToken, refreshToken, user.getUsername());
+        return new AuthResponse(accessToken, refreshToken, user.getUsername(), user.getRuolo());
     }
 
     public AuthResponse refreshAccessToken(String refreshToken) {
@@ -116,7 +116,7 @@ public class AuthService {
         String newAccessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
         logger.info("Nuovo token di accesso generato per l'utente: {}", user.getUsername());
 
-        return new AuthResponse(newAccessToken, refreshToken, user.getUsername());
+        return new AuthResponse(newAccessToken, refreshToken, user.getUsername(), user.getRuolo());
     }
 
     @Transactional

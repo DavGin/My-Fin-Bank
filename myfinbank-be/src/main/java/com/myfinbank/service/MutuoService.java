@@ -33,15 +33,13 @@ public class MutuoService {
 
     private final MutuoRepository mutuoRepository;
     private final UserRepository userRepository;
-    private final RegistroMutuoRepository registroMutuoRepository;
     private final RateCalcolateRepository rateCalcolateRepository;
     private final ContoRepository contoRepository;
     private final TransazioneRepository transazioneRepository;
 
-    public MutuoService(MutuoRepository mutuoRepository, UserRepository userRepository, RegistroMutuoRepository registroMutuoRepository, RateCalcolateRepository rateCalcolateRepository, ContoRepository contoRepository, TransazioneRepository transazioneRepository) {
+    public MutuoService(MutuoRepository mutuoRepository, UserRepository userRepository,RateCalcolateRepository rateCalcolateRepository, ContoRepository contoRepository, TransazioneRepository transazioneRepository) {
         this.mutuoRepository = mutuoRepository;
         this.userRepository = userRepository;
-        this.registroMutuoRepository = registroMutuoRepository;
         this.rateCalcolateRepository = rateCalcolateRepository;
         this.contoRepository = contoRepository;
         this.transazioneRepository = transazioneRepository;
@@ -94,7 +92,10 @@ public class MutuoService {
     }
 
     @Transactional
-    public MutuoRequestDto changeStatoMutuo(String numeroPratica, String newStato, String motivo) {
+    public MutuoRequestDto changeStatoMutuo(EsitoMutuoDto dto) {
+        String numeroPratica = dto.getNumeroPratica();
+        String newStato = dto.getNewStato();
+        String motivo = dto.getMotivo();
         Mutuo mutuo = mutuoRepository.findByNumeroPratica(numeroPratica);
         if (mutuo == null) {
             throw new ResourceNotFoundException("Mutuo numero " + numeroPratica + " non trovato");
@@ -107,35 +108,37 @@ public class MutuoService {
         mutuoRepository.save(mutuo);
 
         // log decisione
-        User admin = getCurrentUser();
-        RegistroMutuo reg = new RegistroMutuo();
-        reg.setMutuo(mutuo);
-        reg.setUser(admin);
-        reg.setStato(newStato);
-        reg.setMotivo(motivo);
-        registroMutuoRepository.save(reg);
+//        User admin = getCurrentUser();
+//        RegistroMutuo reg = new RegistroMutuo();
+//        reg.setMutuo(mutuo);
+//        reg.setUser(admin);
+//        reg.setStato(newStato);
+//        reg.setMotivo(motivo);
+//        registroMutuoRepository.save(reg);
+
+
 
         return MutuoRequestDto.fromEntity(mutuo);
     }
 
     @Transactional(readOnly = true)
-    public List<RegistroMutuoDto> getStoricoRegistroMutuo(String numeroPratica ) {
+    public List<MutuoRequestDto> getStoricoRegistroMutuo(String numeroPratica ) {
         Mutuo mutuo = mutuoRepository.findByNumeroPratica(numeroPratica);
         if (mutuo == null) {
             throw new ResourceNotFoundException("Mutuo numero " + numeroPratica + " non trovato");
         }
-        return registroMutuoRepository.findByMutuo(mutuo)
+        return mutuoRepository.findByMutuo(mutuo)
                 .stream()
-                .map(RegistroMutuoDto::fromEntity)
+                .map(MutuoRequestDto::fromEntity)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<RegistroMutuoDto> getListaStoricoRegistroMutuo() {
+    public List<MutuoRequestDto> getListaStoricoRegistroMutuo() {
 
-        return registroMutuoRepository.findAll()
+        return mutuoRepository.findAll()
                 .stream()
-                .map(RegistroMutuoDto::fromEntity)
+                .map(MutuoRequestDto::fromEntity)
                 .toList();
     }
 

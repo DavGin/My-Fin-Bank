@@ -57,7 +57,8 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(Map.of(
                         "accessToken", authResponse.getAccessToken(),
-                        "username", authResponse.getUsername()
+                        "username", authResponse.getUsername(),
+                        "role",authResponse.getRole()
                 ));
     }
 

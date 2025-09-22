@@ -41,29 +41,31 @@ public class MutuoController {
     }
 
     // APPROVA richiesta mutuo
-    @PutMapping("/approvaMutuo/{numeroPratica}/{newStato}/{motivo}")
+    @PostMapping("/approvaMutuo")
     @PreAuthorize("hasRole('ADMIN')")
-    public MutuoRequestDto approvaMutuo(@PathVariable String numeroPratica, @PathVariable String newStato, @PathVariable String motivo) {
-        return mutuoService.changeStatoMutuo(numeroPratica, newStato, motivo);
+    public MutuoRequestDto approvaMutuo(@Valid @RequestBody EsitoMutuoDto dto) {
+        return mutuoService.changeStatoMutuo(dto);
     }
 
     // RIFIUTA richiesta mutuo
-    @PutMapping("/rejectMutuo/{numeroPratica}/{newStato}/{motivo}")
+    @PostMapping("/rejectMutuo")
     @PreAuthorize("hasRole('ADMIN')")
-    public MutuoRequestDto rejectMutuo(@PathVariable String numeroPratica, @PathVariable String newStato, @PathVariable String motivo) {
-        return mutuoService.changeStatoMutuo(numeroPratica, newStato, motivo);
+    public MutuoRequestDto rejectMutuo(@Valid @RequestBody EsitoMutuoDto dto) {
+        return mutuoService.changeStatoMutuo(dto);
     }
 
     @GetMapping("/getStoricoRegistroMutuo/{numeroPratica}")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<RegistroMutuoDto> getStoricoRegistroMutuo(@PathVariable String numeroPratica) {
+    public List<MutuoRequestDto> getStoricoRegistroMutuo(@PathVariable String numeroPratica) {
         return mutuoService.getStoricoRegistroMutuo(numeroPratica);
     }
 
     @GetMapping("/getListaStoricoRegistroMutuo")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<RegistroMutuoDto> getListaStoricoRegistroMutuo() {
-        return mutuoService.getListaStoricoRegistroMutuo();
+    public List<MutuoRequestDto> getListaStoricoRegistroMutuo() {
+        List<MutuoRequestDto> listaStoricoRegistroMutuo = mutuoService.getListaStoricoRegistroMutuo();
+
+        return listaStoricoRegistroMutuo;
     }
 
 //    @GetMapping("/calcolaRata/{numeroPratica}")
