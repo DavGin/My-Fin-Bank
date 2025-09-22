@@ -75,7 +75,7 @@ export default function DashboardPage() {
     return (
         <Box>
             <Typography variant="h4" gutterBottom>
-                Benvenuto
+                Benvenuto {user?.nome} {user?.cognome}
             </Typography>
             {contoSelezionato ? (
                 <>

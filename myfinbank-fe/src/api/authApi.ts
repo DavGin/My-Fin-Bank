@@ -1,7 +1,7 @@
 import api from './axiosClient'
 
 export const authApi = {
-    login: (payload: { username: string; password: string; ruolo:string }) => {
+    login: (payload: { username: string; password: string; }) => {
         console.log('Effettuando login con:', payload)
         return api.post('/auth/login', payload)
             .then(res => {

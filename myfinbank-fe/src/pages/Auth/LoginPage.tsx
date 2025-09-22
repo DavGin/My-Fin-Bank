@@ -1,8 +1,8 @@
 // src/pages/Auth/LoginPage.tsx
 import { useForm } from 'react-hook-form'
-import { useMutation } from '@tanstack/react-query'
+import {useMutation} from '@tanstack/react-query'
 import { useAppDispatch } from '../../app/hooks'
-import { setCredentials } from '../../features/auth/authSlice'
+import {setCredentials, setUser} from '../../features/auth/authSlice'
 import { authApi } from '../../api/authApi'
 import {
     Container,
@@ -14,6 +14,7 @@ import {
     CircularProgress,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import {getProfile} from "../../features/profile/api.ts";
 
 // form type: email + password
 type FormData = { username: string; password: string; role: string; }
@@ -26,8 +27,6 @@ type ResponseData = {
     refreshToken?: string
     refresh_token?: string
     user?: { username: string; }
-    role?: string
-    ruolo?: string
 }
 
 export default function LoginPage() {
@@ -40,20 +39,40 @@ export default function LoginPage() {
             console.log('[LoginPage] Tentativo di login con i seguenti dati:', data)
             return authApi.login(data)
         },
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
             console.log('[LoginPage] Login riuscito. Dati restituiti:', data)
 
-            const accessToken = data.accessToken || data.access_token || data.token
+            const accessToken = data.accessToken || data.access_token || data.token ||  ''
+            console.log('[ACCESS_TOKEN] ----> ', accessToken)
             const refreshToken = data.refreshToken || data.refresh_token
-            const userFromBody = data.user || 
-                (data.username ? { username: data.username, ruolo: data.role || data.ruolo } : null)
-
-            const user = userFromBody || { username: '', ruolo: '' }
-
+            console.log('[REFRESH_TOKEN] ----> ', refreshToken)
+            const userFromBody = data.user ||
+                (data.username ? { username: data.username} : null)
+            const user = {
+            ...(userFromBody || {username: ''}),
+                    nome: '',
+                    cognome: '',
+                    ruolo: '',
+                    username: '',
+                    email: ''
+            }
             console.log('[LoginPage] Dati memorizzati nel Redux store:', { user, accessToken, refreshToken })
-            dispatch(setCredentials({ user, accessToken, refreshToken }))
-            console.log('----> ', user.ruolo)
-            if(user?.ruolo=== 'ADMIN')
+            dispatch(setCredentials({ user, accessToken, refreshToken: refreshToken || '' }))
+
+            const profile = await getProfile()
+            console.log('[Profile] Dati del profilo:', {profile})
+            const newuser = {
+                ...(userFromBody || {username: ''}),
+                nome: profile.nome,
+                cognome: profile.cognome,
+                ruolo: profile.ruolo,
+                username: profile.username,
+                email: profile.email
+            }
+            console.log('[LoginPage] Dati memorizzati nel Redux store:', { newuser })
+            dispatch(setUser(newuser))
+            console.log('[PROFILE]----> ', newuser.ruolo)
+            if(newuser.ruolo=== 'ADMIN')
 
                 navigate('/admin/dashboard')
             else

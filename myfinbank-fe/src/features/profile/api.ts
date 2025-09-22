@@ -9,6 +9,7 @@ export type Profile = {
     codiceFiscale: string
     dataNascita: string;
     isAdmin: boolean;
+    password: string;
     ruolo: string;
 }
 
