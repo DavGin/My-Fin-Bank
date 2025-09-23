@@ -2,7 +2,7 @@
 import { useEffect } from 'react'
 import { useAppDispatch } from '../../app/hooks'
 import { setUser, logout } from  '../../features/auth/authSlice'
-import { authApi } from '../../api/authApi'
+import {getProfile} from "../profile/api.ts";
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
     const dispatch = useAppDispatch()
@@ -12,7 +12,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         if (!token) return
 
         // Prova a recuperare il profilo
-        authApi.registrazione()
+        getProfile()
             .then(user => {
                 dispatch(setUser(user))
             })

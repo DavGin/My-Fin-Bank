@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import { store } from '../app/store'
 import { logout, setCredentials } from '../features/auth/authSlice'
-import { authApi } from './authApi'
+import {refresh} from "./authApi.ts";
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -79,11 +79,17 @@ api.interceptors.response.use(
             isRefreshing = true
 
             try {
+                const refreshToken = store.getState().auth.accessToken; // Ottieni il token dallo stato globale
+
+                if (!refreshToken) {
+                    throw new Error("Refresh token non disponibile");
+                }
+
                 log('Performing token refresh')
-                const data = await authApi.refresh() 
+                const data = await  refresh(refreshToken)
                 const newToken = data.accessToken
 
-                store.dispatch(setCredentials({ user: store.getState().auth.user!, accessToken: newToken }))
+                store.dispatch(setCredentials({ user: store.getState().auth.user!, accessToken: newToken, refreshToken: refreshToken }))
                 log('New token obtained and credentials updated', { newToken })
 
                 processQueue(null, newToken)

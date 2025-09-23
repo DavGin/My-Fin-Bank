@@ -1,7 +1,7 @@
 import { useForm, Controller } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { authApi } from '../../api/authApi'
+import { type Registrazione, registrazione} from '../../api/authApi'
 import { Link as RouterLink } from 'react-router-dom'
 
 import {
@@ -13,26 +13,17 @@ import {
     Alert, Link,
 } from '@mui/material'
 
-type RegisterFormData = {
-    username: string
-    email: string
-    password: string
-    nome: string
-    cognome: string
-    codiceFiscale: string
-    dataNascita: string
-    isAdmin: boolean
-}
+
 
 export default function UserRegisterPage() {
-    const { control, handleSubmit } = useForm<RegisterFormData>({
+    const { control, handleSubmit } = useForm<Registrazione>({
         defaultValues: { isAdmin: true }, // Ruolo admin impostato a "true"
     })
     const navigate = useNavigate()
 
     // Nuova sintassi React Query v5
     const mutation = useMutation({
-        mutationFn: (data: RegisterFormData) => authApi.registrazione(data), // Funzione API di registrazione
+        mutationFn: (data: Registrazione) => registrazione(data), // Funzione API di registrazione
         onSuccess: () => {
             alert('Registrazione completata, torna alla login')
             navigate('/auth/login') // Reindirizza alla pagina di login
@@ -42,7 +33,7 @@ export default function UserRegisterPage() {
         },
     })
 
-    const onSubmit = (formData: RegisterFormData) => {
+    const onSubmit = (formData: Registrazione) => {
         mutation.mutate(formData)
     }
 

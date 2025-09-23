@@ -1,63 +1,48 @@
-import api from './axiosClient'
+import axiosClient from "./axiosClient.ts";
 
-export const authApi = {
-    login: (payload: { username: string; password: string; }) => {
-        console.log('Effettuando login con:', payload)
-        return api.post('/auth/login', payload)
-            .then(res => {
-                console.log('Risposta login:', res.data)
-                return res.data
-            })
-            .catch(err => {
-                console.error('Errore login:', err)
-                throw err
-            })
-    },
-    refresh: () => {
-        console.log('Effettuando richiesta di refresh token')
-        return api.post('/auth/refresh')
-            .then(res => {
-                console.log('Token aggiornato:', res.data)
-                return res.data
-            })
-            .catch(err => {
-                console.error('Errore durante il refresh del token:', err)
-                throw err
-            })
-    },
-    registrazione: (payload: {
-        username: string
-        email: string
-        password: string
-        nome: string
-        cognome: string
-        codiceFiscale: string
-        dataNascita: string
-        isAdmin: boolean
-        ruolo: string
-    }) => {
-        console.log('Effettuando registrazione utente con payload:', payload)
-        return api.post('/auth/register', payload)
-            .then(res => {
-                console.log('Risultato registrazione utente:', res.data)
-                return res.data
-            })
-            .catch(err => {
-                console.error('Errore durante la registrazione admin:', err)
-                throw err
-            })
-    },
-    getProfile: () => {
-        console.log('Recupera utente')
-        return api.get('/api/v1/profile/profile', )
-            .then(res => {
-                console.log('Risultato registrazione utente:', res.data)
-                return res.data
-            })
-            .catch(err => {
-                console.error('Errore durante la registrazione admin:', err)
-                throw err
-            })
-    },
 
+export type ResponseData = {
+    username?: string
+    accessToken?: string
+    access_token?: string
+    token?: string
+    refreshToken?: string
+    refresh_token?: string
+    user?: { username: string; }
+}
+
+type FormData = { username: string; password: string; role: string; }
+
+export async function login(data: FormData): Promise<ResponseData> {
+    console.log('Effettuando login con:', data);
+    const res = await axiosClient.post('/auth/login', data); // Assicura che `ResponseData` sia specificato
+    return res.data;
+}
+export type RefreshResponse = {
+    accessToken: string;
+    refreshToken: string;
+};
+
+export async function refresh(token: string): Promise<RefreshResponse> {
+    console.log('Effettuando login con:', token);
+    const res =  await axiosClient.post(`/auth/refres/${token}`); // Assicura che `ResponseData` sia specificato
+    return res.data;
+}
+
+export type Registrazione = {
+    username: string
+    email: string
+    password: string
+    nome: string
+    cognome: string
+    codiceFiscale: string
+    dataNascita: string
+    isAdmin: boolean
+    ruolo: string
+}
+
+export async function registrazione(data: Registrazione): Promise<Registrazione> {
+    console.log('Effettuando login con:', data);
+    const res = await axiosClient.post('/auth/register', data); // Assicura che `ResponseData` sia specificato
+    return res.data;
 }

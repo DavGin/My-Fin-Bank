@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import {useMutation} from '@tanstack/react-query'
 import { useAppDispatch } from '../../app/hooks'
 import {setCredentials, setUser} from '../../features/auth/authSlice'
-import { authApi } from '../../api/authApi'
+import {login, type ResponseData} from '../../api/authApi'
 import {
     Container,
     TextField,
@@ -15,30 +15,26 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import {getProfile} from "../../features/profile/api.ts";
+import {useState} from "react";
 
 // form type: email + password
 type FormData = { username: string; password: string; role: string; }
 
-type ResponseData = {
-    username?: string
-    accessToken?: string
-    access_token?: string
-    token?: string
-    refreshToken?: string
-    refresh_token?: string
-    user?: { username: string; }
-}
+
 
 export default function LoginPage() {
     const { register, handleSubmit } = useForm<FormData>()
     const dispatch = useAppDispatch()
     const navigate = useNavigate()
 
-    const mutation = useMutation<ResponseData, Error, FormData>({
-        mutationFn: (data: FormData) => {
-            console.log('[LoginPage] Tentativo di login con i seguenti dati:', data)
-            return authApi.login(data)
-        },
+    // Stato per messaggi di errore
+    const [errore, setError] = useState<string | null>(null);
+
+
+    const mutation = useMutation<ResponseData,unknown, FormData>({
+      
+        mutationFn: login,
+        
         onSuccess: async (data) => {
             console.log('[LoginPage] Login riuscito. Dati restituiti:', data)
 
@@ -78,8 +74,16 @@ export default function LoginPage() {
             else
                 navigate('/')
         },
-        onError: (error) => {
-            console.error('[LoginPage] Errore durante il login:', error)
+        onError: (errore: any) => {
+            console.error('[LoginPage] Errore durante il login:', errore)
+            // Controlla se l'errore ha una risposta del backend
+            if (errore.response && errore.response.data) {
+                console.error('[LoginPage] Dettagli errore del backend:', errore.response.data);
+            }
+            // Salva il messaggio di errore generico o specifico per visualizzarlo a video
+            setError(
+                errore.response?.data?.message || 'Credenziali non valide. Riprova.'
+            );
         },
     })
 
@@ -95,11 +99,16 @@ export default function LoginPage() {
                     Login
                 </Typography>
 
-                {mutation.isError && (
+                {/* Messaggio d'errore */}
+                {errore && (
                     <Alert severity="error" sx={{ mb: 2 }}>
-                        {(mutation.error as any)?.response?.data || 'Credenziali non valide'}
+                        {/* Label personalizzata */}
+                        <Typography variant="subtitle2" color="error" fontWeight="bold">
+                            Credenziali errate
+                        </Typography>
                     </Alert>
                 )}
+
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <TextField

@@ -73,7 +73,7 @@ export async function simulateInvestimento(data: SimulationInvestimentoInput): P
     return res.data
 }
 
-type Rendimento = {
+export type Rendimento = {
     periodo: string;
     valoreIniziale: number;
     rendimentoMaturato: number;
