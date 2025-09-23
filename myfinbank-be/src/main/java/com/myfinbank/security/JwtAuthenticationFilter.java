@@ -47,17 +47,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        logger.debug("Request received for URI: {}", request.getRequestURI());
+        logger.info("Request received for URI: {}", request.getRequestURI());
 
         String header = request.getHeader("Authorization");
-        logger.debug("Authorization header: {}", header);
+        logger.info("Authorization header: {}", header);
 
+        logger.info("Request method: {}", request.getRequestURI());
 
-        if (header != null && header.startsWith("Bearer ")) {
+        if(!request.getRequestURI().equals("/api/auth/login") && !request.getRequestURI().equals("/api/auth/register")) {
+
+            if (header == null || !header.startsWith("Bearer ")) {
+                throw new MissingTokenException("Token mancante nell'header Authorization");
+            }
+
             String token = header.substring(7);
-            logger.debug("Extracted token: {}", token);
+            logger.info("Extracted token: {}", token);
 
-            try{
+            try {
 
                 jwtTokenUtil.validateToken(token);
                 String username = jwtTokenUtil.getUsernameFromToken(token);
@@ -69,15 +75,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
                 logger.info("Authentication set successfully for user: {}", username);
+
             } catch (ExpiredJwtException ex) {
-                logger.warn("Token expired", ex.getClaims().getSubject());
+                logger.info("Token expired", ex.getClaims().getSubject());
                 throw new ExpiredTokenException("Il token fornito è scaduto");
-            } catch (JwtException ex) { // include SignatureException, MalformedJwtException ecc.
-                logger.error("Token error", ex);
+            } catch (UnsupportedJwtException | MalformedJwtException | SignatureException ex) {
                 throw new InvalidTokenException("Il token fornito non è valido");
+            } catch (IllegalArgumentException ex) { // include SignatureException, MalformedJwtException ecc.
+                logger.info("Token error", ex);
+                throw new InvalidTokenException("Il token fornito non è valido o vuoto");
             }
-        } else {
-            logger.debug("Authorization header not found or malformed.");
         }
 
         filterChain.doFilter(request, response);

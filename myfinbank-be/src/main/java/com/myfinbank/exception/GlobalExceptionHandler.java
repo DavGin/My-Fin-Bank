@@ -1,95 +1,78 @@
 package com.myfinbank.exception;
 
-import com.myfinbank.dto.ErrorResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myfinbank.service.MessageService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
-
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final MessageService messageService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Gestione delle eccezioni Runtime
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, WebRequest request) {
-        logger.error("Errore: {}", ex.getMessage(), ex);
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Errore Interno del Server",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    public GlobalExceptionHandler(MessageService messageService) {
+        this.messageService = messageService;
     }
 
-    // Gestione di una custom exception o errori previsti
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        logger.warn("Errore di validazione: {}", ex.getMessage());
+    @ExceptionHandler(AccessDeniedException.class)
+    public void handleAccessDeniedException(Exception ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int status = HttpStatus.FORBIDDEN.value();
+        String error = HttpStatus.FORBIDDEN.getReasonPhrase();
+        String message = messageService.getMessage("access.denied");
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "Richiesta Non Valida",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", status);
+        errorResponse.put("error", error);
+        errorResponse.put("message", message);
+        errorResponse.put("path", request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
-
-    // Eccezione generica per evitare errori non gestiti
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex, WebRequest request) {
-        logger.error("Errore inaspettato: {}", ex.getMessage(), ex);
+    public void handleAllExceptions(Exception ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int status = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        String error = HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase();
+        String message = messageService.getMessage("error.internal");
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Errore Non Previsto",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", status);
+        errorResponse.put("error", error);
+        errorResponse.put("message", message);
+        errorResponse.put("path", request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 
-    // Gestione del token mancante
-    @ExceptionHandler(MissingTokenException.class)
-    public ResponseEntity<ErrorResponse> handleMissingTokenException(MissingTokenException ex, WebRequest request) {
-        logger.warn("Token non fornito: {}", ex.getMessage());
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public void handleNotFound(ResourceNotFoundException ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int status = HttpStatus.NOT_FOUND.value();
+        String error = HttpStatus.NOT_FOUND.getReasonPhrase();
+        String message = messageService.getMessage("error.not.found");
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
-                "Token mancante",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", status);
+        errorResponse.put("error", error);
+        errorResponse.put("message", ex.getMessage());
+        errorResponse.put("path", request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
-
-    // Gestione del token non valido
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTokenException(InvalidTokenException ex, WebRequest request) {
-        logger.warn("Token non valido: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
-                "Token non valido",
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-    }
-
-
 }

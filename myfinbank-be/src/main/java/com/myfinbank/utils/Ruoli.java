@@ -2,6 +2,6 @@ package com.myfinbank.utils;
 
 public enum Ruoli {
 
-    USER,
-    ADMIN
+    ROLE_USER,
+    ROLE_ADMIN
 }

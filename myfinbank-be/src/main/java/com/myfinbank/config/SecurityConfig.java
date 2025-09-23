@@ -1,6 +1,5 @@
 package com.myfinbank.config;
 
-import com.myfinbank.exception.CustomAccessDeniedHandler;
 import com.myfinbank.exception.JwtAuthenticationEntryPoint;
 import com.myfinbank.security.JwtAuthenticationFilter;
 import com.myfinbank.service.CustomUserDetailsService;
@@ -17,12 +16,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -33,20 +30,15 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtFilter;
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final CustomAccessDeniedHandler accessDeniedHandler  ;
-
-
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtFilter,
             CustomUserDetailsService userDetailsService,
-            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-            CustomAccessDeniedHandler accessDeniedHandler
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint
                           ) {
         this.jwtFilter = jwtFilter;
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -61,7 +53,6 @@ public class SecurityConfig {
         )
             .exceptionHandling(exception -> exception
                     .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                    .accessDeniedHandler(accessDeniedHandler)
             )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Applica il filtro JWT
 
