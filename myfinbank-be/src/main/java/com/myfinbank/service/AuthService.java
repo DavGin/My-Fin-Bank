@@ -4,7 +4,6 @@ import com.myfinbank.dto.*;
 import com.myfinbank.entity.RefreshToken;
 import com.myfinbank.entity.User;
 import com.myfinbank.repository.UserRepository;
-import com.myfinbank.security.JwtTokenProvider;
 import com.myfinbank.security.JwtTokenUtil;
 import com.myfinbank.utils.Ruoli;
 import org.slf4j.Logger;
@@ -27,20 +26,18 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenUtil jwtTokenUtil;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
-                       JwtTokenProvider jwtTokenProvider,
                        RefreshTokenService refreshTokenService,
                        JwtTokenUtil jwtTokenUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
-        this.jwtTokenProvider = jwtTokenProvider;
+
         this.refreshTokenService = refreshTokenService;
         this.jwtTokenUtil = jwtTokenUtil;
     }
@@ -54,7 +51,7 @@ public class AuthService {
             throw new IllegalArgumentException("Email già in uso: " + request.getEmail());
         }
 
-        String ruolo = request.getIsAdmin() ? String.valueOf(Ruoli.ADMIN) : String.valueOf(Ruoli.USER);
+        String ruolo = request.getIsAdmin() ? String.valueOf(Ruoli.ROLE_ADMIN) : String.valueOf(Ruoli.ROLE_USER);
         if (ruolo == null) {
             logger.error("Ruolo non trovato durante la registrazione per l'utente: {}", request.getUsername());
             throw new IllegalStateException("Ruolo non trovato");
@@ -89,7 +86,7 @@ public class AuthService {
 
         logger.info("Login riuscito per l'utente: {}", request.getUsername());
 
-        String accessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
+        String accessToken = jwtTokenUtil.generateAccessToken(user.getUsername());
         String refreshToken = jwtTokenUtil.refreshToken(user);
 
         refreshTokenService.createRefreshToken(user.getUsername());
@@ -113,7 +110,7 @@ public class AuthService {
         }
 
         User user = stored.getUser();
-        String newAccessToken = jwtTokenUtil.generateToken(user.getUsername(), user.getRuolo());
+        String newAccessToken = jwtTokenUtil.generateAccessToken(user.getUsername());
         logger.info("Nuovo token di accesso generato per l'utente: {}", user.getUsername());
 
         return new AuthResponse(newAccessToken, refreshToken, user.getUsername());

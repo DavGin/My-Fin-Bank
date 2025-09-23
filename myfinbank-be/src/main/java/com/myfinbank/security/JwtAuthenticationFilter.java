@@ -2,9 +2,15 @@ package com.myfinbank.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myfinbank.exception.ErrorResponse;
+import com.myfinbank.exception.ExpiredTokenException;
 import com.myfinbank.exception.InvalidTokenException;
 import com.myfinbank.exception.MissingTokenException;
 import com.myfinbank.service.CustomUserDetailsService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,51 +51,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
         logger.debug("Authorization header: {}", header);
-        try {
-
-            if (header != null && header.startsWith("Bearer ")) {
-                String token = header.substring(7);
-                logger.debug("Extracted token: {}", token);
-
-                if (jwtTokenUtil.validateToken(token)) {
-                    String username = jwtTokenUtil.getUsername(token);
-                    logger.info("Valid token for user: {}", username);
-                    UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
 
-                    var ruoli = jwtTokenUtil.getRuoli(token).stream()
-                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                            .collect(Collectors.toList());
-                    logger.debug("User roles: {}", ruoli);
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            logger.debug("Extracted token: {}", token);
 
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, ruoli);
+            try{
 
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                    logger.info("Authentication set successfully for user: {}", username);
-                } else {
-                    logger.warn("Invalid token provided.");
-                }
-            } else {
-                logger.debug("Authorization header not found or malformed.");
+                jwtTokenUtil.validateToken(token);
+                String username = jwtTokenUtil.getUsernameFromToken(token);
+                logger.info("Valid token for user: {}", username);
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+                logger.info("Authentication set successfully for user: {}", username);
+            } catch (ExpiredJwtException ex) {
+                logger.warn("Token expired", ex.getClaims().getSubject());
+                throw new ExpiredTokenException("Il token fornito è scaduto");
+            } catch (JwtException ex) { // include SignatureException, MalformedJwtException ecc.
+                logger.error("Token error", ex);
+                throw new InvalidTokenException("Il token fornito non è valido");
             }
-
-            filterChain.doFilter(request, response);
-        } catch (InvalidTokenException | MissingTokenException ex) {
-            // Gestisci eccezioni personalizzate
-            logger.error("JWT Error: {}", ex.getMessage());
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(new ObjectMapper().writeValueAsString(
-                    new ErrorResponse(
-                            HttpStatus.UNAUTHORIZED.value(),
-                            "Token non valido o mancante",
-                            ex.getMessage(),
-                            request.getRequestURI()
-                    )
-            ));
-
+        } else {
+            logger.debug("Authorization header not found or malformed.");
         }
+
+        filterChain.doFilter(request, response);
+
     }
 }

@@ -3,6 +3,7 @@ package com.myfinbank.security;
 import com.myfinbank.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -14,55 +15,64 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenUtil {
 
-    private static final String SECRET = "supersecretkeymysupersecurekeysupersecret";
-    private static final long EXPIRATION_MS = 15 * 60 * 1000; // 1h.
-    private static final long REFRESH_TOKEN = 7 * 24 * 60 * 60 * 1000; //.
 
+    private final Key key;
+    private final long accessTokenValidityMs;
+    private final long refreshTokenValidityMs;
 
-    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    public JwtTokenUtil(
+            @Value("${app.jwt.secret}") String secret,
+            @Value("${app.jwt.accessTokenExpirationMs}") long accessTokenExpirationMs,
+            @Value("${app.jwt.refreshTokenExpirationMs}") long refreshTokenExpirationMs
+    ) {
+        this.key = createHmacKey(secret);
+        this.accessTokenValidityMs = accessTokenExpirationMs;
+        this.refreshTokenValidityMs = refreshTokenExpirationMs;
+    }
+    private Key createHmacKey(String secret) {
+        byte[] keyBytes = secret.getBytes();
+        // Rende la chiave di lunghezza 32 byte (256 bit) se è più corta
+        if (keyBytes.length < 32) {
+            byte[] paddedKey = Arrays.copyOf(keyBytes, 32); // Padding con zeri
+            return Keys.hmacShaKeyFor(paddedKey);
+        } else if (keyBytes.length > 32) {
+            // Se la chiave è troppo lunga, la troncatura garantisce 32 byte esatti
+            byte[] truncatedKey = Arrays.copyOf(keyBytes, 32);
+            return Keys.hmacShaKeyFor(truncatedKey);
+        }
+        // Chiave esattamente lunga 32 byte
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
 
-    public String generateToken(String username, String ruoli) {
+    public String generateAccessToken(String username) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + accessTokenValidityMs);
         return Jwts.builder()
                 .setSubject(username)
-                .claim("ruoli", ruoli)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .setIssuedAt(now)
+                .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String getUsername(String token) {
-        return parseClaims(token).getBody().getSubject();
+    public String getUsernameFromToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build()
+                .parseClaimsJws(token).getBody().getSubject();
     }
 
-    public Set<String> getRuoli(String token) {
-        // Recupera il claim "ruoli" come stringa
-        String rolesString = (String) parseClaims(token).getBody().get("ruoli");
+    public void validateToken(String token) throws JwtException {
 
-        // Trasformiamo la stringa delimitata da virgole in un Set<String>
-        return Arrays.stream(rolesString.split(","))
-                .collect(Collectors.toSet());
-    }
+        Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
-    public boolean validateToken(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    private Jws<Claims> parseClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
     }
 
     public String refreshToken(User user) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + accessTokenValidityMs);
         return Jwts.builder()
                 .setSubject(user.getUsername())
-                .claim("ruoli", user.getRuolo())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN))
+                .setIssuedAt(now)
+                .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

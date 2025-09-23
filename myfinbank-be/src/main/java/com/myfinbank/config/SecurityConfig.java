@@ -1,6 +1,7 @@
 package com.myfinbank.config;
 
 import com.myfinbank.exception.CustomAccessDeniedHandler;
+import com.myfinbank.exception.JwtAuthenticationEntryPoint;
 import com.myfinbank.security.JwtAuthenticationFilter;
 import com.myfinbank.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -31,13 +32,20 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
     private final CustomUserDetailsService userDetailsService;
-    private final AccessDeniedHandler accessDeniedHandler;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler  ;
 
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter, CustomUserDetailsService userDetailsService, CustomAccessDeniedHandler accessDeniedHandler
+
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtFilter,
+            CustomUserDetailsService userDetailsService,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            CustomAccessDeniedHandler accessDeniedHandler
                           ) {
         this.jwtFilter = jwtFilter;
         this.userDetailsService = userDetailsService;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
     }
 
@@ -51,6 +59,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/**").hasAnyRole("USER", "ADMIN") // Accessibile da USER e ADMIN
                 .anyRequest().authenticated() // Tutte le altre richieste richiedono autenticazione
         )
+            .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                    .accessDeniedHandler(accessDeniedHandler)
+            )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Applica il filtro JWT
 
     return http.build();
