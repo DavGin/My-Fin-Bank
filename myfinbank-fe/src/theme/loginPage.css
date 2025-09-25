@@ -1,0 +1,16 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5; /* Stesso colore del Box esterno */
+    height: 100%;             /* Assicurati che occupino tutta l'altezza */
+    width: 100%;              /* Assicurati che occupino tutta la larghezza */
+    box-sizing: border-box;   /* Assicura che padding e margini siano calcolati */
+    overflow: hidden;
+
+}
+label {
+    display: block;         /* Assicura che occupi una nuova linea */
+    font-size: 16px;        /* Dimensione del testo */
+    color: #333;            /* Colore del testo */
+    margin: 10px 0;         /* Spaziatura intorno all'etichetta */
+}
