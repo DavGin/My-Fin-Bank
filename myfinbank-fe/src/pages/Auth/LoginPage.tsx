@@ -90,6 +90,7 @@ export default function LoginPage() {
     const onSubmit = (data: FormData) => {
         console.log('[LoginPage] Form inviato con dati:', data)
         mutation.mutate(data)
+
     }
 
     return (

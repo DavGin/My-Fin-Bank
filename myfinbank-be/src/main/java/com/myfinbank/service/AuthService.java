@@ -3,6 +3,7 @@ package com.myfinbank.service;
 import com.myfinbank.dto.*;
 import com.myfinbank.entity.RefreshToken;
 import com.myfinbank.entity.User;
+import com.myfinbank.exception.InvalidTokenException;
 import com.myfinbank.repository.UserRepository;
 import com.myfinbank.security.JwtTokenUtil;
 import com.myfinbank.utils.Ruoli;
@@ -15,8 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.Date;
 
 @Service
 public class AuthService {
@@ -89,7 +89,8 @@ public class AuthService {
         String accessToken = jwtTokenUtil.generateAccessToken(user.getUsername());
         String refreshToken = jwtTokenUtil.refreshToken(user);
 
-        refreshTokenService.createRefreshToken(user.getUsername());
+        refreshTokenService.createRefreshToken(user.getUsername(), refreshToken);
+        logger.info("Token di refresh generato ----> " + refreshToken);
         logger.info("Token di accesso e refresh generati per l'utente: {}", user.getUsername());
 
         return new AuthResponse(accessToken, refreshToken, user.getUsername());
@@ -98,39 +99,29 @@ public class AuthService {
     public AuthResponse refreshAccessToken(String refreshToken) {
         logger.info("Richiesta di refresh del token di accesso con il token di refresh: {}", refreshToken);
 
-        RefreshToken stored = refreshTokenService.findByToken(refreshToken)
-                .orElseThrow(() -> {
-                    logger.error("Token di refresh non valido o inesistente: {}", refreshToken);
-                    return new RuntimeException("Invalid refresh token");
-                });
+        RefreshToken stored = refreshTokenService.findByToken(refreshToken);
+        if (stored == null) {
+            throw new InvalidTokenException("Refresh token trovato");
+        }
 
-        if (stored.getExpiryDate().isBefore(LocalDateTime.now())) {
+        if (stored.getExpiryDate().before(new Date())) {
             logger.warn("Token di refresh scaduto: {}", refreshToken);
             throw new RuntimeException("Refresh token expired");
         }
 
         User user = stored.getUser();
         String newAccessToken = jwtTokenUtil.generateAccessToken(user.getUsername());
+        String newRefreshToken = jwtTokenUtil.refreshToken(user);
+        refreshTokenService.createRefreshToken(user.getUsername(), newRefreshToken);
         logger.info("Nuovo token di accesso generato per l'utente: {}", user.getUsername());
 
-        return new AuthResponse(newAccessToken, refreshToken, user.getUsername());
+        return new AuthResponse(newAccessToken, newRefreshToken, user.getUsername());
     }
 
     @Transactional
-    public void logout(String refreshTokenString) {
-        logger.info("Richiesta di logout ricevuta per il token di refresh: {}", refreshTokenString);
-
-        if (refreshTokenString == null || refreshTokenString.isBlank()) {
-            logger.warn("Logout fallito: token di refresh assente o vuoto.");
-            return;
-        }
-
-        Optional<RefreshToken> maybeToken = refreshTokenService.findByToken(refreshTokenString);
-        if (maybeToken.isPresent()) {
-            refreshTokenService.deleteByUserId(maybeToken.get().getUser().getId());
-            logger.info("Logout avvenuto con successo per l'utente: {}", maybeToken.get().getUser().getUsername());
-        } else {
-            logger.warn("Token di refresh non trovato durante il logout: {}", refreshTokenString);
-        }
+    public void logout(User user) {
+        logger.info("Logout per l'utente: {}", user.getUsername());
+        logger.info("Eliminazione token di accesso e refresh per l'utente: {}", user.getId());
+        refreshTokenService.deleteByUserId(user.getId());
     }
 }

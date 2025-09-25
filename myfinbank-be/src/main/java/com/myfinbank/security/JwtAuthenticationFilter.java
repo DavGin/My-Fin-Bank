@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         logger.info("Request method: {}", request.getRequestURI());
 
-        if(!request.getRequestURI().equals("/api/auth/login") && !request.getRequestURI().equals("/api/auth/register")) {
+        if(!request.getRequestURI().equals("/api/auth/login") && !request.getRequestURI().equals("/api/auth/register") && !request.getRequestURI().equals("/api/auth/refresh")) {
 
             if (header == null || !header.startsWith("Bearer ")) {
                 throw new MissingTokenException("Token mancante nell'header Authorization");

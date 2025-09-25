@@ -13,6 +13,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -36,10 +37,10 @@ public class RefreshToken {
 
   @NotNull
   @Column(name = "EXPIRY_DATE", nullable = false)
-  private LocalDateTime expiryDate;
+  private Date expiryDate;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "CREATED_AT")
-  private LocalDateTime createdAt = LocalDateTime.now();
+  private Date createdAt;
 
 }

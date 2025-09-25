@@ -1,8 +1,11 @@
 package com.myfinbank.security;
 
 import com.myfinbank.entity.User;
+import com.myfinbank.service.AuthService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenUtil {
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtil.class);
 
 
     private final Key key;
@@ -67,13 +71,20 @@ public class JwtTokenUtil {
     }
 
     public String refreshToken(User user) {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + accessTokenValidityMs);
-        return Jwts.builder()
-                .setSubject(user.getUsername())
-                .setIssuedAt(now)
-                .setExpiration(expiry)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+        try {
+            Date now = new Date();
+            Date expiry = new Date(now.getTime() + refreshTokenValidityMs);
+            return Jwts.builder()
+                    .setSubject(user.getUsername())
+                    .setIssuedAt(now)
+                    .setExpiration(expiry)
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
+        } catch (Exception e) {
+            // Log dell'eccezione per approfondimenti
+            logger.error("Errore durante la generazione del token di refresh: {}", e.getMessage(), e);
+            throw new RuntimeException("Errore interno durante la generazione del token di refresh");
+        }
     }
+
 }

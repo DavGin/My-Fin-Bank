@@ -2,14 +2,17 @@ package com.myfinbank.service;
 
 import com.myfinbank.entity.RefreshToken;
 import com.myfinbank.entity.User;
+import com.myfinbank.exception.ResourceNotFoundException;
 import com.myfinbank.repository.RefreshTokenRepository;
 import com.myfinbank.repository.UserRepository;
+import com.myfinbank.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,42 +21,42 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
-    private final long refreshTokenDurationMs;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final long refreshTokenValidityMs;
+
 
     public RefreshTokenService(RefreshTokenRepository refreshTokenRepository,
                                UserRepository userRepository,
-                               @Value("${app.jwt.refreshTokenExpirationMs}") long refreshTokenDurationMs) {
+                               JwtTokenUtil jwtTokenUtil,
+    @Value("${app.jwt.refreshTokenExpirationMs}") long refreshTokenExpirationMs)
+    {
         this.refreshTokenRepository = refreshTokenRepository;
         this.userRepository = userRepository;
-        this.refreshTokenDurationMs = refreshTokenDurationMs;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.refreshTokenValidityMs = refreshTokenExpirationMs;
     }
 
     @Transactional
-    public RefreshToken createRefreshToken(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public RefreshToken createRefreshToken(String username, String refreshToken) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("error.not.found"));
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + refreshTokenValidityMs);
         RefreshToken token = new RefreshToken();
         token.setUser(user);
-        token.setExpiryDate(LocalDateTime.now().plusMinutes(refreshTokenDurationMs));
-        token.setToken(UUID.randomUUID().toString());
+        token.setCreatedAt(now);
+        token.setExpiryDate(expiry);
+        token.setToken(refreshToken);
         return refreshTokenRepository.save(token);
     }
 
-    public Optional<RefreshToken> findByToken(String token) {
+    public RefreshToken findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
 
-    public RefreshToken verifyExpiration(RefreshToken token) {
-        if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
-            // token expired -> delete it and throw
-            refreshTokenRepository.delete(token);
-            throw new RuntimeException("Refresh token was expired. Please make a new login request");
-        }
-        return token;
-    }
 
     @Transactional
     public int deleteByUserId(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("error.not.found"));
         return refreshTokenRepository.deleteByUser(user);
     }
 

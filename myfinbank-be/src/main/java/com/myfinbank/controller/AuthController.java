@@ -1,7 +1,9 @@
 package com.myfinbank.controller;
 
 import com.myfinbank.dto.*;
+import com.myfinbank.entity.User;
 import com.myfinbank.service.AuthService;
+import com.myfinbank.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -10,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -23,8 +27,9 @@ public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
+    private final UserService userService;
 
-    public AuthController(AuthService authService) { this.authService = authService; }
+    public AuthController(AuthService authService, UserService userService) { this.authService = authService; this.userService = userService; }
 
     @PostMapping("/register")
     @Operation(summary = "Registra un nuovo utente")
@@ -53,6 +58,7 @@ public class AuthController {
                 .maxAge(Duration.ofMinutes(2))
                 .build();
 
+        logger.info("REFRESH_TOKEN ----> " + authResponse.getRefreshToken());
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(Map.of(
@@ -62,16 +68,17 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@CookieValue("refreshToken") String refreshToken) {
+    public ResponseEntity refreshToken(@CookieValue("refreshToken") String refreshToken) {
+        logger.info("REFRESH_TOKEN ----> " + refreshToken);
         AuthResponse newTokens = authService.refreshAccessToken(refreshToken);
 
         // opzionale: rigenerare anche refreshToken e risettare il cookie
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newTokens.getRefreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/api/auth/refresh")
                 .sameSite("Strict")
-                .maxAge(Duration.ofDays(2))
+                .maxAge(Duration.ofDays(1))
                 .build();
 
         return ResponseEntity.ok()
@@ -82,10 +89,25 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "Logout utente")
-    public ResponseEntity<?> logout(@RequestBody TokenRefreshRequest request) {
-        logger.info("Logout in corso per token: {}", request.getRefreshToken());
-        authService.logout(request.getRefreshToken());
+    public ResponseEntity logout(@AuthenticationPrincipal UserDetails userDetails) {
+
         logger.info("Logout completato con successo");
-        return ResponseEntity.ok().build();
+        User user = userService.getProfile(userDetails.getUsername());
+        authService.logout(user);
+
+        // Eliminare il cookie refreshToken lato client
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "") // Imposta un valore vuoto
+                .httpOnly(true)
+                .secure(false) // Usa `true` in produzione per HTTPS
+                .path("/api/auth/refresh") // Il percorso deve essere lo stesso del cookie originale
+                .maxAge(0) // Cookie scaduto (immadiatamente eliminato)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .body(Map.of("message", "Logout completato con successo!"));
+
+
+
     }
 }

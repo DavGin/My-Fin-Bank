@@ -47,7 +47,7 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Applica il bean CorsConfigurationSource
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configura sessioni stateless
         .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/favicon.ico").permitAll() // Endpoint pubblici
+                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/favicon.ico","/api/auth/refresh", "/api/auth/logout").permitAll() // Endpoint pubblici
                 .requestMatchers("/api/v1/**").hasAnyRole("USER", "ADMIN") // Accessibile da USER e ADMIN
                 .anyRequest().authenticated() // Tutte le altre richieste richiedono autenticazione
         )
