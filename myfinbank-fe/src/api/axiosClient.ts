@@ -1,114 +1,110 @@
-import axios, { AxiosError } from 'axios'
-import { store } from '../app/store'
-import { logout, setCredentials } from '../features/auth/authSlice'
-import {refresh} from "./authApi.ts";
+import axios from 'axios';
+import { store } from '../app/store';
+import { logout, setAccessToken } from '../features/auth/authSlice';
+import {logoutApi, refresh} from "./authApi.ts";
+import type {NavigateFunction} from 'react-router-dom';
 
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-    headers: { 'Content-Type': 'application/json' },
-    timeout: 30000,
-    withCredentials: true,
-})
 
-// Logging utility
-const log = (message: string, data?: any) => {
-    console.log(`[AxiosClient] ${message}`, data || '')
+// Configurazione del client Axios
+const axiosClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+
+export async function performLogout(navigate: NavigateFunction): Promise<void> {
+    console.log('[PERFORM_LOGOUT] Avvio del logout...');
+    try {
+        // Notifica il backend del logout
+        await logoutApi();
+        console.log('[PERFORM_LOGOUT] Logout API completato.');
+    } catch (error) {
+        console.error('[PERFORM_LOGOUT] Errore durante il logout API:', error);
+        // Possiamo comunque continuare con il logout locale anche se il server non risponde correttamente.
+    }
+
+    // Esegui il logout locale (stato Redux e localStorage)
+    store.dispatch(logout());
+    localStorage.clear(); // Rimuove i dati dal localStorage
+    console.log('[PERFORM_LOGOUT] Logout locale completato.');
+
+    // Reindirizza l'utente alla pagina di login
+    navigate('/auth/login');
+    console.log('[PERFORM_LOGOUT] Reindirizzamento completato.');
 }
 
-// Add accessToken to every request
-api.interceptors.request.use((config) => {
-    console.log('Request data:', config.data) // Logga i dati della richiesta
-    const state = store.getState()
-    const token = state.auth.accessToken
+
+
+export async function refreshToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+        const token = store.getState().auth.refreshToken ?? ''; // Ottieni l'eventuale refresh token dallo stato
+        const response = await refresh(token);
+
+        if (response.accessToken) {
+            store.dispatch(setAccessToken(response.accessToken)); // Aggiorna il token nel Redux store
+            return response.accessToken;
+        }
+        store.dispatch(logout());
+      return null;
+    } catch {
+      store.dispatch(logout());
+      return null;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+// Aggiunge l'Authorization Token alle richieste
+axiosClient.interceptors.request.use(
+  (config) => {
+    const token = store.getState().auth.accessToken;
     if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`
-        log('Authorization header set', { token })
-    } else {
-        log('No token found in state')
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
     }
-    return config
-}, (error) => {
-    console.error('Request error:', error)
-    log('Request error intercepted', error)
-    return Promise.reject(error)
-})
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// Response interceptor for handling 401
-let isRefreshing = false
-let failedQueue: any[] = []
+// Intercetta le risposte per gestire errori 401 (token scaduti)
+axiosClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-const processQueue = (error: any, token: string | null = null) => {
-    failedQueue.forEach(({ resolve, reject }) => {
-        if (error) {
-            reject(error)
-        } else {
-            resolve(token)
-        }
-    })
-    failedQueue = []
-    log('Processed failedQueue', { error, token })
-}
-
-api.interceptors.response.use(
-    (response) => {
-        log('Response received', response)
-        return response
-    },
-    async (error: AxiosError) => {
-        const originalRequest: any = error.config
-        log('Response error intercepted', { error, originalRequest })
-
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            if (isRefreshing) {
-                log('Adding request to failedQueue as refresh is in progress')
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject })
-                })
-                    .then((token) => {
-                        originalRequest.headers['Authorization'] = `Bearer ${token}`
-                        log('Retrying original request with new token', { token })
-                        return api(originalRequest)
-                    })
-                    .catch((err) => {
-                        log('Retry failed', err)
-                        return Promise.reject(err)
-                    })
-            }
-
-            originalRequest._retry = true
-            isRefreshing = true
-
-            try {
-                const refreshToken = store.getState().auth.accessToken; // Ottieni il token dallo stato globale
-
-                if (!refreshToken) {
-                    throw new Error("Refresh token non disponibile");
-                }
-
-                log('Performing token refresh')
-                const data = await  refresh(refreshToken)
-                const newToken = data.accessToken
-
-                store.dispatch(setCredentials({ user: store.getState().auth.user!, accessToken: newToken, refreshToken: refreshToken }))
-                log('New token obtained and credentials updated', { newToken })
-
-                processQueue(null, newToken)
-
-                originalRequest.headers['Authorization'] = `Bearer ${newToken}`
-                log('Retrying original request', { originalRequest })
-                return api(originalRequest)
-            } catch (err) {
-                log('Error during token refresh', err)
-                processQueue(err, null)
-                store.dispatch(logout())
-                return Promise.reject(err)
-            } finally {
-                isRefreshing = false
-            }
-        }
-
-        return Promise.reject(error)
+    if (!originalRequest || originalRequest._retryCount >= 2) {
+      return Promise.reject(error);
     }
-)
 
-export default api
+    if (error.response?.status === 401) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+
+      const newToken = await refreshToken();
+      if (newToken) {
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        return axiosClient(originalRequest);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default axiosClient;

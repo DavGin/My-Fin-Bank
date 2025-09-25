@@ -4,13 +4,12 @@ import type { MouseEvent } from 'react'
 import { Avatar, IconButton, Menu, MenuItem, ListItemIcon, Tooltip, Typography } from '@mui/material'
 import PersonIcon from '@mui/icons-material/Person'
 import LogoutIcon from '@mui/icons-material/Logout'
-import { useAppSelector, useAppDispatch } from '../../app/hooks'
-import { logout } from './authSlice'
+import { useAppSelector} from '../../app/hooks'
 import { useNavigate } from 'react-router-dom'
+import {performLogout} from "../../api/axiosClient.ts";
 
 export default function UserMenu() {
     const user = useAppSelector(state => state.auth.user)
-    const dispatch = useAppDispatch()
     const navigate = useNavigate()
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -29,10 +28,9 @@ export default function UserMenu() {
         navigate('/profile')
     }
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         handleClose()
-        dispatch(logout())
-        navigate('/login')
+        await performLogout(navigate);
     }
 
     // Visualizza avatar con iniziali o icona

@@ -5,6 +5,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 interface User { nome: string; cognome: string; email: string; username: string; ruolo: string;}
 interface AuthState { user: User | null; accessToken: string | null; refreshToken: string | null; }
 
+
 const initialState: AuthState = {
     user: null,
     accessToken: localStorage.getItem('accessToken') || null,
@@ -26,6 +27,9 @@ const authSlice = createSlice({
         setUser(state, action: PayloadAction<User>) {
             state.user = action.payload
         },
+        setAccessToken(state, action: PayloadAction<string>) {
+            state.accessToken = action.payload
+        },
         logout(state) {
             state.user = null
             state.accessToken = null
@@ -34,5 +38,5 @@ const authSlice = createSlice({
     },
 })
 
-export const { setCredentials, setUser, logout } = authSlice.actions
+export const { setCredentials, setUser, setAccessToken, logout } = authSlice.actions
 export default authSlice.reducer

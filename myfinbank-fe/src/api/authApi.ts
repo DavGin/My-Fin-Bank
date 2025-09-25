@@ -18,15 +18,14 @@ export async function login(data: FormData): Promise<ResponseData> {
     const res = await axiosClient.post('/auth/login', data); // Assicura che `ResponseData` sia specificato
     return res.data;
 }
-export type RefreshResponse = {
-    accessToken: string;
-    refreshToken: string;
-};
-
-export async function refresh(token: string): Promise<RefreshResponse> {
-    console.log('Effettuando login con:', token);
-    const res =  await axiosClient.post(`/auth/refres/${token}`); // Assicura che `ResponseData` sia specificato
-    return res.data;
+export async function refresh(token: string): Promise<ResponseData> {
+    try {
+        const res = await axiosClient.post(`/auth/refresh`, { token }, { withCredentials: true });
+        return res.data; // Restituisci i dati della risposta
+    } catch (error) {
+        console.error('Errore durante il refresh del token:', error);
+        throw error;
+    }
 }
 
 export type Registrazione = {
@@ -45,4 +44,9 @@ export async function registrazione(data: Registrazione): Promise<Registrazione>
     console.log('Effettuando login con:', data);
     const res = await axiosClient.post('/auth/register', data); // Assicura che `ResponseData` sia specificato
     return res.data;
+}
+
+export async function logoutApi(): Promise<void> {
+    const res = await axiosClient.post('/auth/logout');
+    return res.data
 }

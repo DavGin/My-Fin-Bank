@@ -16,6 +16,7 @@ import MutuoSimulationPage from "../pages/Mutui/MutuoSimulationPage.tsx";
 import InvestimentiPage from "../pages/Investimenti/InvestimentiPage.tsx";
 import InvestimentoDetailPage from "../pages/Investimenti/InvestimentoDetailsPage.tsx";
 import SimulazioneInvestimentoPage from "../pages/Investimenti/InvestimentiSimulationPage.tsx";
+import SessionManager from "../features/SessioneManager.tsx";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
     const token = useAppSelector(state => state.auth.accessToken)
@@ -28,6 +29,7 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 export default function AppRouter() {
     return (
         <Suspense fallback={<div>Loading...</div>}>
+            <SessionManager />
             <Routes>
                 <Route path="/auth/login" element={<LoginPage />} />
                 <Route path="/" element={<Navigate to="/auth/login" replace />} />

@@ -19,9 +19,9 @@ import AssignmentIcon from '@mui/icons-material/Assignment'
 import LogoutIcon from '@mui/icons-material/Logout'
 import HomeIcon from '@mui/icons-material/Home'
 import SecurityIcon from '@mui/icons-material/Security'
-import { useAppDispatch, useAppSelector } from '../../app/hooks'
-import { logout } from '../auth/authSlice'
+import { useAppSelector } from '../../app/hooks'
 import UserMenu from '../auth/UserMenu.tsx'
+import {performLogout} from "../../api/axiosClient.ts";
 
 const drawerWidth = 240
 
@@ -42,12 +42,13 @@ const adminMenuItems = [
 
 export default function DashboardLayout() {
     const navigate = useNavigate()
-    const dispatch = useAppDispatch()
     const user = useAppSelector(state => state.auth.user)
 
-    const handleLogout = () => {
-        dispatch(logout())
-        navigate('/login')
+    const handleLogout = async () => {
+        const refreshToken = localStorage.getItem('refreshToken') ?? '';
+        console.log('[HANDLE_LOGOUT] Tentativo di logout con token:', refreshToken);
+        await performLogout(navigate);
+
     }
 
     const menuItems = user?.ruolo === 'ADMIN' ? adminMenuItems : userMenuItems
