@@ -5,6 +5,7 @@ import com.myfinbank.entity.User;
 import com.myfinbank.service.AuthService;
 import com.myfinbank.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -31,7 +32,7 @@ public class AuthController {
 
     public AuthController(AuthService authService, UserService userService) { this.authService = authService; this.userService = userService; }
 
-    @PostMapping("/register")
+    @PostMapping(value="/register")
     @Operation(summary = "Registra un nuovo utente")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         logger.info("Inizio registrazione per utente: {}", request.getUsername());
@@ -41,7 +42,10 @@ public class AuthController {
             return ResponseEntity.status(201).build();
         } catch (IllegalArgumentException ex) {
             logger.error("Errore durante la registrazione: {}", ex.getMessage(), ex);
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity
+                    .badRequest()
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8")
+                    .body(Map.of("message", ex.getMessage()));
         }
     }
 
@@ -52,10 +56,10 @@ public class AuthController {
         // refreshToken come cookie HttpOnly
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(true) // in prod: solo HTTPS
-                .path("/api/auth/refresh") // cookie inviato solo a quell'endpoint
-                .sameSite("Strict")
-                .maxAge(Duration.ofMinutes(2))
+                .secure(false) // in prod: solo HTTPS
+                .path("/") // cookie inviato solo a quell'endpoint
+                .sameSite("Lax")
+                .maxAge(Duration.ofMinutes(20))
                 .build();
 
         logger.info("REFRESH_TOKEN ----> " + authResponse.getRefreshToken());
@@ -75,10 +79,10 @@ public class AuthController {
         // opzionale: rigenerare anche refreshToken e risettare il cookie
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newTokens.getRefreshToken())
                 .httpOnly(true)
-                .secure(false)
-                .path("/api/auth/refresh")
-                .sameSite("Strict")
-                .maxAge(Duration.ofDays(1))
+                .secure(false) // true in produzione con HTTPS
+                .path("/") // root
+                .sameSite("Lax") // puoi usare "Lax" se frontend cross-origin
+                .maxAge(Duration.ofDays(20))
                 .build();
 
         return ResponseEntity.ok()

@@ -11,7 +11,7 @@ public class AuthRequest {
 
 
     @NotBlank
-    private String username;
+    private String identifier;
 
     @NotBlank
     private String password;
