@@ -24,6 +24,12 @@ public class InvestimentoController {
         return investimentoService.createInvestment(dto);
     }
 
+    @GetMapping("/{identificativo}/rendimenti")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public List<RendimentoDto> getRendimenti(@PathVariable String identificativo) {
+        return investimentoService.calcolaRendimenti(identificativo);
+    }
+
     @GetMapping("/getUserInvestments")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public List<InvestimentoDto> getUserInvestments() {

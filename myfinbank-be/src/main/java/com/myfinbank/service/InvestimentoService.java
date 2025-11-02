@@ -1,5 +1,6 @@
 package com.myfinbank.service;
 
+import com.myfinbank.dto.MarketDataDto;
 import com.myfinbank.dto.investimento.*;
 import com.myfinbank.entity.Investimento;
 import com.myfinbank.entity.User;
@@ -16,29 +17,47 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
 public class InvestimentoService {
 
-    private final InvestimentoRepository investimentoRepository;
     private final UserRepository userRepository;
+    private final InvestimentoRepository investimentoRepository;
+    private final MarketDataService marketDataService;
 
-    public InvestimentoService(InvestimentoRepository investimentoRepository, UserRepository userRepository) {
-        this.investimentoRepository = investimentoRepository;
+    public InvestimentoService(UserRepository userRepository,
+                               InvestimentoRepository investimentoRepository,
+                               MarketDataService marketDataService) {
         this.userRepository = userRepository;
+        this.investimentoRepository = investimentoRepository;
+        this.marketDataService = marketDataService;
     }
 
     @Transactional
     public InvestimentoDto createInvestment(CreaInvestimentoDto dto) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User " + username + "non trovato"));
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new ResourceNotFoundException("Utente non trovato");
 
+        // ✅ Recupera il prezzo più recente del simbolo scelto
+        List<MarketDataDto> marketData = marketDataService.getMarketData(dto.getSimboloMercato());
+        if (marketData.isEmpty()) {
+            throw new ResourceNotFoundException("Dati di mercato non disponibili per " + dto.getSimboloMercato());
+        }
+
+        MarketDataDto latest = marketData.get(0);
+        BigDecimal prezzoCorrente = latest.getClose();
+
+        // Calcolo quantità acquistabile con l’importo investito
+        BigDecimal quantita = dto.getImportoInvestito().divide(prezzoCorrente, 6, BigDecimal.ROUND_HALF_UP);
+
+        // ✅ Crea l’entità investimento
         Investimento inv = new Investimento();
         inv.setUser(user);
         inv.setIdentificativo(Util.generateRandomNumericString(8));
-        inv.setTipoInvestimento(dto.getTipoInvestimento());
+        inv.setTipoInvestimento(dto.getTipoInvestimento() + " - " + dto.getSimboloMercato());
         inv.setImportoInvestito(dto.getImportoInvestito());
         inv.setTassoRitornoPrevisto(dto.getTassoRitornoPrevisto());
         inv.setStatoInvestimento(StatoInvestimento.ACTIVE.name());
@@ -46,15 +65,84 @@ public class InvestimentoService {
         inv.setDataFine(LocalDateTime.now().plusMonths(dto.getDurataMesi()));
         inv.setMesi(dto.getDurataMesi());
 
+        // 👇 Potresti salvare anche le info di mercato, se vuoi:
+         inv.setPrezzoIngresso(prezzoCorrente);
+         inv.setQuantita(quantita);
 
-        return InvestimentoDto.fromEntity(investimentoRepository.save(inv));
+        inv.setSimboloMercato(dto.getSimboloMercato()); // 👈 aggiunto
+
+
+        Investimento salvato = investimentoRepository.save(inv);
+
+        return InvestimentoDto.fromEntity(salvato);
     }
+
+    @Transactional(readOnly = true)
+    public List<RendimentoDto> calcolaRendimenti(String identificativo) {
+        Investimento investimento = investimentoRepository.findByIdentificativo(identificativo)
+                .orElseThrow(() -> new ResourceNotFoundException("Investimento non trovato"));
+
+        // Dati base
+        BigDecimal importo = investimento.getImportoInvestito();
+        String symbol = investimento.getSimboloMercato();
+
+        // Recupera dati storici di mercato
+        List<MarketDataDto> datiMercato = marketDataService.getMarketData(symbol);
+
+        if (datiMercato.isEmpty()) {
+            throw new RuntimeException("Nessun dato di mercato disponibile per " + symbol);
+        }
+
+        // Ordina per data crescente
+        datiMercato.sort(Comparator.comparing(MarketDataDto::getDate));
+
+        List<RendimentoDto> rendimenti = new ArrayList<>();
+        BigDecimal valore = importo;
+        BigDecimal valoreIniziale = importo;
+
+        // Prendiamo l’ultimo N mesi di dati
+        int mesi = investimento.getMesi();
+        List<MarketDataDto> ultimiDati = datiMercato.stream()
+                .limit(mesi)
+                .toList();
+
+        for (int i = 0; i < ultimiDati.size(); i++) {
+            MarketDataDto corrente = ultimiDati.get(i);
+            MarketDataDto precedente = i > 0 ? ultimiDati.get(i - 1) : null;
+
+            BigDecimal rendimento = BigDecimal.ZERO;
+
+            if (precedente != null) {
+                BigDecimal variazionePercentuale = corrente.getClose()
+                        .subtract(precedente.getClose())
+                        .divide(precedente.getClose(), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+
+                // Applichiamo la variazione al valore attuale dell’investimento
+                rendimento = valore.multiply(variazionePercentuale)
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                valore = valore.add(rendimento);
+            }
+
+            rendimenti.add(new RendimentoDto(
+                    corrente.getDate(),
+                    valoreIniziale,
+                    rendimento,
+                    valore
+            ));
+        }
+
+        return rendimenti;
+    }
+
+
+
 
     @Transactional(readOnly = true)
     public List<InvestimentoDto> getListaInvestimentiAttivi () {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User " + username + "non trovato"));
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new ResourceNotFoundException("error.not.found");
 
         return investimentoRepository.findByUser(user)
                 .stream()

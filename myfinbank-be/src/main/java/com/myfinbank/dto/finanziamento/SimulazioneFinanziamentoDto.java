@@ -1,4 +1,4 @@
-package com.myfinbank.dto.mutuo;
+package com.myfinbank.dto.finanziamento;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class SimulazioneMutuoDto {
+public class SimulazioneFinanziamentoDto {
 
     @NotNull
     @Min(1)

@@ -47,4 +47,13 @@ public class Investimento {
 
     @Column(name = "DURATA_MESI", nullable = false)
     private int mesi;
+
+    @Column(name = "PREZZO_INGRESSO")
+    private BigDecimal prezzoIngresso;
+
+    @Column(name = "QUANTITA")
+    private BigDecimal quantita;
+
+    @Column(name = "SIMBOLO_MERCATO", nullable = false)
+    private String simboloMercato;
 }

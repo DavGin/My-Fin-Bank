@@ -73,4 +73,16 @@ public class Util {
                 .collect(Collectors.joining());
     }
 
+    // --- Metodi ausiliari ---
+    public static String generaNumeroCarta() {
+        // Mock semplice: in reale va cifrato e controllato univocità
+        long numero = 4000000000000000L + (long)(Math.random() * 1000000000000000L);
+        return String.valueOf(numero);
+    }
+
+    public static String generaCvc() {
+        int cvc = (int)(Math.random() * 1000);
+        return String.format("%03d", cvc);
+    }
+
 }
