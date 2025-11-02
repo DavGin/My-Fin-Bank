@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -42,14 +43,22 @@ public class Conto {
   @Column(name = "VALUTA", length = 10)
   private String valuta;
 
-  @ColumnDefault("0")
-  @Column(name = "SALDO", precision = 19, scale = 2)
-  private BigDecimal saldo;
-
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "DATA_CREAZIONE")
   private LocalDateTime dataCreation = LocalDateTime.now();
 
   @Column(name = "DATA_CHIUSURA")
   private LocalDateTime dataChiusura;
+
+
+    @Column(name = "SALDO_CONTABILE")
+    private BigDecimal saldoContabile;
+
+    @Column(name = "ULTIMO_AGGIORNAMENTO")
+    private LocalDateTime ultimoAggiornamento;
+
+    @ColumnDefault("0")
+    @Column(name = "SALDO_DISPONIBILE", precision = 19, scale = 2)
+    private BigDecimal saldoDisponibile;
+
 }

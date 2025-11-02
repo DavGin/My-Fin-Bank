@@ -2,9 +2,11 @@ package com.myfinbank.service;
 
 import com.myfinbank.dto.ContoDto;
 import com.myfinbank.entity.Conto;
+import com.myfinbank.entity.Transazione;
 import com.myfinbank.entity.User;
 import com.myfinbank.exception.ResourceNotFoundException;
 import com.myfinbank.repository.ContoRepository;
+import com.myfinbank.repository.TransazioneRepository;
 import com.myfinbank.repository.UserRepository;
 import com.myfinbank.utils.Util;
 import org.slf4j.Logger;
@@ -15,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ContoService {
@@ -24,21 +25,20 @@ public class ContoService {
 
     private final ContoRepository contoRepository;
     private final UserRepository userRepository;
+    private final TransazioneRepository transazioneRepository;
 
-    public ContoService(ContoRepository contoRepository, UserRepository userRepository) {
+    public ContoService(ContoRepository contoRepository, UserRepository userRepository, TransazioneRepository transazioneRepository) {
         this.contoRepository = contoRepository;
         this.userRepository = userRepository;
+        this.transazioneRepository = transazioneRepository;
     }
 
     @Transactional
     public ContoDto createConto(String username, ContoDto dto) {
         logger.info("Avvio creazione del conto per l'utente: {}", username);
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    logger.warn("Utente non trovato per username: {}", username);
-                    return new ResourceNotFoundException("Utente non trovato: " + username);
-                });
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new ResourceNotFoundException("error.not.found");
 
         logger.debug("Recuperato utente: {}", user);
         String numeroConto = Util.generateRandomNumericString(10);
@@ -48,7 +48,9 @@ public class ContoService {
         conto.setTipo(dto.getTipo());
         conto.setIban(Util.generateIban("IT", "12345", "67890", numeroConto));
         conto.setValuta(dto.getValuta());
-        conto.setSaldo(dto.getSaldo() != null ? dto.getSaldo() : BigDecimal.ZERO);
+        conto.setSaldoDisponibile(dto.getSaldoDisponibile() != null ? dto.getSaldoDisponibile() : BigDecimal.ZERO);
+        conto.setSaldoContabile(dto.getSaldoContabile() != null ? dto.getSaldoContabile() : BigDecimal.ZERO);
+        conto.setUltimoAggiornamento(LocalDateTime.now());
 
         contoRepository.save(conto);
 
@@ -60,30 +62,24 @@ public class ContoService {
     public List<ContoDto> listConti(String username) {
         logger.info("Caricamento lista dei conti per l'utente: {}", username);
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    logger.warn("Utente non trovato per username: {}", username);
-                    return new ResourceNotFoundException("Utente non trovato: " + username);
-                });
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new ResourceNotFoundException("error.not.found");
 
         logger.debug("Recuperato utente: {}", user);
 
-        List<ContoDto> conti = contoRepository.findByUser(user)
-                .stream().map(ContoDto::fromEntity).collect(Collectors.toList());
+        List<Conto> conti = contoRepository.findByUser(user);
+        if (conti == null || conti.isEmpty()) throw new ResourceNotFoundException("conto.non.trovato");
 
         logger.info("Trovati {} conti per l'utente: {}", conti.size(), username);
-        return conti;
+        return ContoDto.fromEntityList(conti);
     }
 
     @Transactional(readOnly = true)
     public ContoDto findByNumeroConto(String numeroConto) {
         logger.info("Ricerca conto per NumeroConto: {}", numeroConto);
 
-        Conto conto = contoRepository.findByNumeroConto(numeroConto)
-                .orElseThrow(() -> {
-                    logger.warn("Conto non trovato per NumeroConto: {}", numeroConto);
-                    return new ResourceNotFoundException("Conto non trovato con numero: " + numeroConto);
-                });
+        Conto conto = contoRepository.findByNumeroConto(numeroConto);
+        if(conto == null) throw new ResourceNotFoundException("conto.non.trovato");
 
         logger.info("Conto trovato per NumeroConto: {}", numeroConto);
         return ContoDto.fromEntity(conto);
@@ -93,11 +89,13 @@ public class ContoService {
     public void chiudiConto(String numeroConto) {
         logger.info("Avvio chiusura del conto per NumeroConto: {}", numeroConto);
 
-        Conto conto = contoRepository.findByNumeroConto(numeroConto)
-                .orElseThrow(() -> {
-                    logger.warn("Conto non trovato per NumeroConto: {}", numeroConto);
-                    return new ResourceNotFoundException("Conto non trovato con numero: " + numeroConto);
-                });
+        Conto conto = contoRepository.findByNumeroConto(numeroConto);
+        if(conto == null) throw new ResourceNotFoundException("conto.non.trovato");
+
+        List<Transazione> transazioni = transazioneRepository.findByConto(conto);
+        for (Transazione transazione : transazioni) {
+            transazioneRepository.delete(transazione);
+        }
 
         if (conto.getDataChiusura() != null) {
             logger.error("Tentativo di chiudere un conto già chiuso. NumeroConto: {}", numeroConto);
@@ -105,9 +103,13 @@ public class ContoService {
         }
 
         conto.setDataChiusura(LocalDateTime.now());
-        conto.setSaldo(BigDecimal.ZERO); // Azzeriamo il saldo se richiesto dalla logica.
-        contoRepository.save(conto);
+        conto.setSaldoContabile(BigDecimal.ZERO); // Azzeriamo il saldo se richiesto dalla logica.
+        conto.setSaldoDisponibile(BigDecimal.ZERO); // Azzeriamo il saldo se richiesto dalla logica.
+        conto.setUltimoAggiornamento(LocalDateTime.now());
+        conto.setUser(userRepository.findByUsername(numeroConto));
+        contoRepository.delete(conto);
 
         logger.info("Conto chiuso con successo per NumeroConto: {}", numeroConto);
     }
+
 }

@@ -28,10 +28,11 @@ public class ContoController {
 
     @GetMapping("/listaConti")
     @Operation(summary = "Lista conti associati all'utente")
-    public List<ContoDto> list(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<ContoDto>> list(@AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         User user = userService.getProfile(username);
-        return service.listConti(user.getUsername());
+        List<ContoDto> listaConti = service.listConti(user.getUsername());
+        return ResponseEntity.ok().body(listaConti);
     }
 
     @PostMapping("/createConto")
@@ -49,7 +50,7 @@ public class ContoController {
         return ResponseEntity.ok(conto);
     }
 
-    @PatchMapping("/chiudiConto/{numeroConto}")
+    @GetMapping("/chiudiConto/{numeroConto}")
     @Operation(summary = "Chiudi un conto specifico")
     public ResponseEntity<?> chiudiConto(@PathVariable String numeroConto) {
         service.chiudiConto(numeroConto);
