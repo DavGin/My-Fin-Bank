@@ -1,10 +1,8 @@
 package com.myfinbank.entity;
 
 
-import com.myfinbank.utils.StatoMutuo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,8 +12,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "MUTUI")
-public class Mutuo {
+@Table(name = "FINANZIAMENTI")
+public class Finanziamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,8 +28,11 @@ public class Mutuo {
     @Column(name = "NUMERO_PRATICA", nullable = false, unique = true, length = 10)
     private String numeroPratica;
 
-    @Column(name = "IMPORTO", nullable = false)
-    private BigDecimal importo;
+    @Column(name = "IMPORTO_RICHIESTO", nullable = false)
+    private BigDecimal importoRichiesto;
+
+    @Column(name = "IMPORTO_TOTALE", nullable = false)
+    private BigDecimal importoTotale;
 
     @Column(name = "DURATA_MESI", nullable = false)
     private int durataMesi;
@@ -42,11 +43,14 @@ public class Mutuo {
     @Column(name = "DATA_CREAZIONE", nullable = false)
     private LocalDateTime dataCreazione = LocalDateTime.now();
 
-    @Column(name = "MOTIVO_MUTUO")
-    private String motivoMutuo;
+    @Column(name = "DATA_CHIUSURA", nullable = false)
+    private LocalDateTime dataChiusura;
+
+    @Column(name = "MOTIVO_FINANZIAMENTO")
+    private String motivoFinanziamento;
 
     @Column(name = "STATO", nullable = false)
-    private String stato = String.valueOf(StatoMutuo.PENDING);
+    private String stato;
 
     @Column(name = "MOTIVO_RIFIUTO")
     private String motivoRifiuto;

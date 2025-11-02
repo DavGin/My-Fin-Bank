@@ -1,11 +1,11 @@
-package com.myfinbank.dto.mutuo;
+package com.myfinbank.dto.finanziamento;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class EsitoMutuoDto {
+public class EsitoFinanziamentoDto {
     private String numeroPratica;
 private String newStato;
 private String motivo;

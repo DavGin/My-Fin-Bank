@@ -1,4 +1,4 @@
-package com.myfinbank.dto.mutuo;
+package com.myfinbank.dto.finanziamento;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -6,12 +6,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 
 @Getter
 @Setter
-public class MutuoRequestCreateDto {
+public class FinanziamentoRequestCreateDto {
 
     @NotNull
     @Min(value = 1)
@@ -25,7 +24,7 @@ public class MutuoRequestCreateDto {
     @Min(value = 0)
     private BigDecimal tassoInteresse;
 
-    private String motivoMutuo;
+    private String motivoFinanziamento;
 
 
 
