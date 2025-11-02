@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import {Alert, Card, CardContent, Typography} from "@mui/material";
+import { useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { Alert, Card, CardContent, Typography } from '@mui/material'
 import {
     LineChart,
     Line,
@@ -8,58 +9,60 @@ import {
     Tooltip,
     CartesianGrid,
     ResponsiveContainer,
-} from "recharts";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import {rendimentoInvestimento} from "../../features/Investimenti/api.ts";
+} from 'recharts'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import { rendimentoInvestimento } from '../../features/Investimenti/api'
 
-type Rendimento = {
-    periodo: string;
-    valoreIniziale: number;
-    rendimentoMaturato: number;
-    valoreAttuale: number;
-};
+export type Rendimento = {
+    periodo: string
+    valoreIniziale: number
+    rendimentoMaturato: number
+    valoreAttuale: number
+}
 
-export default function InvestimentoRendimentiPage ({ identificativo }: { identificativo: string }) {
-        const { data, isLoading, isError } = useQuery<Rendimento[]>({
-            queryKey: ["rendimenti", identificativo],
-            queryFn: async () => {
-                try {
-                    const res = await rendimentoInvestimento(identificativo);
-                    if (!res) throw new Error("Nessun dato restituito dalla query!");
-                    return res; // Assicuriamoci che res contenga dati validi
-                } catch (err) {
-                    console.error("Errore nel caricamento dei rendimenti:", err);
-                    throw err; // Rilancia l'errore per consentire a React Query la gestione
-                }
-            },
-            onError: (error) => {
-                console.error("Errore nella query rendimentoInvestimento:", error);
-            },
-        });
+export default function InvestimentoRendimentiPage() {
+    const { identificativo } = useParams<{ identificativo: string }>()
 
-        if (isLoading) return <p>Caricamento rendimenti...</p>;
-        if (isError || !data) return <Alert severity="error">Errore nel caricamento dei rendimenti o dati non disponibili</Alert>;
+    const { data, isLoading, isError } = useQuery<Rendimento[]>({
+        queryKey: ['rendimenti', identificativo],
+        queryFn: async () => {
+            if (!identificativo) throw new Error('Identificativo mancante!')
+            const res = await rendimentoInvestimento(identificativo)
+            if (!res) throw new Error('Nessun dato restituito!')
+            return res
+        },
+    })
 
-        const columns: GridColDef[] = [
-        { field: "periodo", headerName: "Periodo", width: 150 },
-        { field: "valoreIniziale", headerName: "Valore Iniziale (€)", width: 200 },
-        { field: "rendimentoMaturato", headerName: "Rendimento (€)", width: 200 },
-        { field: "valoreAttuale", headerName: "Valore Attuale (€)", width: 200 },
-    ];
+    if (isLoading) return <p>Caricamento rendimenti...</p>
+    if (isError || !data)
+        return (
+            <Alert severity="error">
+                Errore nel caricamento dei rendimenti o dati non disponibili
+            </Alert>
+        )
+
+    const columns: GridColDef[] = [
+        { field: 'periodo', headerName: 'Periodo', width: 150 },
+        { field: 'valoreIniziale', headerName: 'Valore Iniziale (€)', width: 200 },
+        { field: 'rendimentoMaturato', headerName: 'Rendimento (€)', width: 200 },
+        { field: 'valoreAttuale', headerName: 'Valore Attuale (€)', width: 200 },
+    ]
 
     return (
         <Card className="w-full p-4 mt-4">
             <CardContent>
                 <Typography variant="h6" gutterBottom>
-                    Storico Rendimenti
+                    Storico Rendimenti — ID: {identificativo}
                 </Typography>
 
-                {/* Tabella */}
-                <div style={{ height: 400, width: "100%", marginBottom: "2rem" }}>
-                    <DataGrid rows={data.map((d, i) => ({ id: i, ...d }))} columns={columns} />
+                <div style={{ height: 400, width: '100%', marginBottom: '2rem' }}>
+                    <DataGrid
+                        rows={(data ?? []).map((d, i) => ({ id: i, ...d }))}
+                        columns={columns}
+                        disableRowSelectionOnClick
+                    />
                 </div>
 
-                {/* Grafico Line Chart */}
                 <Typography variant="h6" gutterBottom>
                     Andamento Valore Attuale
                 </Typography>
@@ -74,5 +77,5 @@ export default function InvestimentoRendimentiPage ({ identificativo }: { identi
                 </ResponsiveContainer>
             </CardContent>
         </Card>
-    );
+    )
 }
