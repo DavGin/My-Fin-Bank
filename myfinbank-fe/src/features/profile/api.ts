@@ -11,6 +11,7 @@ export type Profile = {
     isAdmin: boolean;
     password: string;
     ruolo: string;
+    ultimoAccesso: string;
 }
 
 export async function getProfile(): Promise<Profile> {

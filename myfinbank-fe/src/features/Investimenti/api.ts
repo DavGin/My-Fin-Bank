@@ -1,4 +1,5 @@
 import axiosClient from '../../api/axiosClient'
+import type { Rendimento } from "../../pages/Investimenti/InvestimentoRendimentoPage"
 
 export type Investimento = {
     id:number;
@@ -14,11 +15,12 @@ export type Investimento = {
 }
 
 export type CreateInvestimentoInput = {
-    tipoInvestimento: 'AZIONI' | 'OBBLIGAZIONI' | 'FONDI' | 'ETF'
+    numeroConto: string
+    tipoInvestimento: string
     importoInvestito: number
-    dataInizio: string
+    tassoRitornoPrevisto: number
     durataMesi: number
-    tassoRitornoPrevisto:number
+    simboloMercato: string // ✅ nuovo campo (equivale al backend)
 }
 
 // export type SimulazioneInvestimentoOutputDto = {
@@ -40,8 +42,19 @@ export async function fetchInvestimenti(): Promise<Investimento[]> {
 }
 
 export async function createInvestimento(data: CreateInvestimentoInput): Promise<Investimento> {
-    const res = await axiosClient.post('/v1/investimento/createInvestimento', data)
-    return res.data
+    const response = await axiosClient.post<Investimento>(
+        '/v1/investimento/createInvestimento',
+        {
+            numeroConto: data.numeroConto,
+            tipoInvestimento: data.tipoInvestimento,
+            importoInvestito: data.importoInvestito,
+            tassoRitornoPrevisto: data.tassoRitornoPrevisto,
+            durataMesi: data.durataMesi,
+            simboloMercato: data.simboloMercato, // ✅ passa il simbolo corretto
+        },
+        { withCredentials: true }
+    )
+    return response.data
 }
 
 export async function fetchInvestimentoById(identificativo: string, mesi:string): Promise<Investimento> {
@@ -73,34 +86,28 @@ export async function simulateInvestimento(data: SimulationInvestimentoInput): P
     return res.data
 }
 
-export type Rendimento = {
-    periodo: string;
-    valoreIniziale: number;
-    rendimentoMaturato: number;
-    valoreAttuale: number;
+// Recupera i rendimenti di un investimento specifico
+export const rendimentoInvestimento = async (identificativo: string): Promise<Rendimento[]> => {
+    const res = await axiosClient.get(`/v1/investimento/${identificativo}/rendimenti`);
+    return res.data;
 };
 
-export async function rendimentoInvestimento(identificativo: string): Promise<Investimento> {
-    const res = await axiosClient.post(`/v1/investimento/getStoricoRendimenti/${identificativo}`)
-    return res.data
+
+export interface MarketData {
+    symbol: string;
+    date: string;
+    open: number;
+    close: number;
 }
 
-
-// TODO Lista investimenti di tutti gli utenti
-export async function fetchAllInvestimenti(): Promise<Investimento[]> {
-    const res = await axiosClient.get('/admin/investimenti')
-    return res.data
+// Recupera i dati per un simbolo specifico
+export async function getMarketData(symbol: string): Promise<MarketData[]> {
+    const res = await axiosClient.get(`/v1/investimento/market-data/${symbol}`);
+    return res.data;
 }
 
-// TODO Chiusura investimento come admin
-export async function adminCloseInvestimento(id: number): Promise<Investimento> {
-    const res = await axiosClient.patch(`/admin/investimenti/${id}/chiudi`)
-    return res.data
+// Recupera la lista di simboli supportati
+export async function getSupportedSymbols(): Promise<string[]> {
+    const res = await axiosClient.get(`/v1/investimento/market-data/symbols`);
+    return res.data;
 }
-
-// TODO (Opzionale) Approvazione investimento
-export async function approveInvestimento(id: number): Promise<Investimento> {
-    const res = await axiosClient.patch(`/admin/investimenti/${id}/approva`)
-    return res.data
-}
-
