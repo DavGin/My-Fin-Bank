@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
-import { simulateMutuo, type SimulationInput, type SimulationRow } from '../../features/Mutui/api';
+import { simulateFin, type SimulationInput, type SimulationRow } from '../../features/Finanziamenti/api';
 import {
     Box,
     Typography,
@@ -19,13 +19,13 @@ import {
     Pagination,
 } from '@mui/material';
 
-export default function MutuoSimulationPage() {
+export default function FinanziamentoSimulationPage() {
     const { register, handleSubmit, formState: { errors } } = useForm<SimulationInput>();
     const [currentPage, setCurrentPage] = useState(1); // Stato per gestire la pagina corrente
     const rowsPerPage = 20; // Numero di righe per pagina
 
     const mutation = useMutation({
-        mutationFn: simulateMutuo,
+        mutationFn: simulateFin,
         onMutate: (variables) => {
             console.log('Inizio simulazione con i seguenti dati:', variables);
         },

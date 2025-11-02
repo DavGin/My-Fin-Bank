@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import type {Rata} from '../../features/Mutui/api'
+import type {Rata} from '../../features/Finanziamenti/api'
 
 const COLORS = {
     PAGATO: '#4caf50',   // verde
@@ -11,7 +11,7 @@ interface Props {
     rate: Rata[]
 }
 
-export default function MutuoPieChart({ rate }: Props) {
+export default function FinanaziamentoPieChart({ rate }: Props) {
     const counts = {
         PAGATO: rate.filter(r => r.statoRata === 'PAGATO').length,
         DA_PAGARE: rate.filter(r => r.statoRata === 'DA_PAGARE').length,
