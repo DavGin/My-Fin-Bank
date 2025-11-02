@@ -9,7 +9,6 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -54,7 +53,7 @@ public class RateCalcolate {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "MUTUO_ID", nullable = false)
-    private Mutuo mutuo;
+    @JoinColumn(name = "FINANZIAMENTO_ID", nullable = false)
+    private Finanziamento finanziamento;
 
 }

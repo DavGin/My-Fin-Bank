@@ -16,7 +16,7 @@ public class RateScheduler {
 
     private final RateCalcolateRepository rateCalcolateRepository;
 
-    @Scheduled(cron = "0 0 2 * * *") // ogni giorno alle 02:00
+    @Scheduled(cron = "0 */5 * * * *") // ogni 5 minuti
     @Transactional
     public void aggiornaStatoRate() {
         LocalDateTime now = LocalDateTime.now();
