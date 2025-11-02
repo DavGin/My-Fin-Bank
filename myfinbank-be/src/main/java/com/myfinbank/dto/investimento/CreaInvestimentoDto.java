@@ -11,8 +11,10 @@ import java.math.BigDecimal;
 @Setter
 public class CreaInvestimentoDto {
 
+    private String numeroConto;
+
     @NotNull
-    private String tipoInvestimento;
+    private String tipoInvestimento; // es: "AZIONI", "CRIPTO", ecc.
 
     @NotNull
     @Min(1)
@@ -22,5 +24,8 @@ public class CreaInvestimentoDto {
     private BigDecimal tassoRitornoPrevisto;
 
     @NotNull
-    private int durataMesi;
+    private Integer durataMesi;
+
+    @NotNull
+    private String simboloMercato; // <-- nuovo campo (es. "AAPL", "BTC", "SP500")
 }

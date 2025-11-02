@@ -2,6 +2,7 @@ package com.myfinbank.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,6 +25,14 @@ public class Transazione {
     @JoinColumn(name = "CONTO_ID", nullable = false)
     private Conto conto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "RATA_ID")
+    private RateCalcolate rata;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CARTA_ID")
+    private Carta carta;
+
     @Column(name = "TIPO_TRANSAZIONE", nullable = false)
     private String tipoTransazione;
 
@@ -36,9 +45,21 @@ public class Transazione {
     @Column(name = "DATA_TRANSAZIONE", nullable = false)
     private LocalDateTime dataTransazione = LocalDateTime.now();
 
+    @Column(name = "DATA_CONTABILE", nullable = false)
+    private LocalDateTime dataContabile;
+
     @Column(name = "DESCRIZIONE", nullable = false)
     private String descrizione;
 
+    @Column(name = "CATEGORIA", nullable = false)
+    private String categoria;
+
+
     @Column(name = "DIREZIONE", nullable = false)
     private String direzione;
+
+    @Size(max = 20)
+    @Column(name = "STATO", length = 20)
+    private String stato;
+
 }
