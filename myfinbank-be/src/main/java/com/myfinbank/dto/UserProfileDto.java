@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -19,6 +20,7 @@ public class UserProfileDto {
     private String codiceFiscale;
     private LocalDate dataNascita;
     private String ruolo;
+    private LocalDateTime ultimoAccesso;
 
 
     public static UserProfileDto fromEntity(User user) {
@@ -32,6 +34,7 @@ public class UserProfileDto {
         dto.setRuolo(user.getRuolo());
         dto.setCodiceFiscale(user.getCodiceFiscale());
         dto.setDataNascita(user.getDataNascita());
+        dto.setUltimoAccesso(user.getUltimoAccesso());
         return dto;
     }
 

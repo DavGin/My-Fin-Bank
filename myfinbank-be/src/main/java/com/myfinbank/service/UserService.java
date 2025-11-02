@@ -4,9 +4,11 @@ import com.myfinbank.dto.PasswordUpdateRequest;
 import com.myfinbank.dto.ProfileUpdateRequest;
 import com.myfinbank.dto.UserProfileDto;
 import com.myfinbank.entity.User;
+import com.myfinbank.exception.ResourceNotFoundException;
 import com.myfinbank.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,11 +32,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getProfile(String username) {
         logger.info("Fetching profile for username: {}", username);
-        User user = userRepository.findByUsername(username).orElseThrow(() -> {
-            logger.warn("User not found for username: {}", username);
-            return new RuntimeException("User not found");
-        });
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) throw new ResourceNotFoundException("error.not.found");
+
         logger.info("Profile fetched successfully for username: {}", username);
+
         return user;
     }
 
@@ -50,10 +53,9 @@ public class UserService {
     @Transactional
     public User updateProfile(String username, ProfileUpdateRequest dto) {
         logger.info("Updating profile for username: {}", username);
-        User user = userRepository.findByUsername(username).orElseThrow(() -> {
-            logger.warn("User not found for username: {}", username);
-            return new RuntimeException("User not found");
-        });
+        User user = userRepository.findByUsername(username);
+
+        if(user ==  null) throw new ResourceNotFoundException("error.not.found");
 
         logger.debug("Updating fields for user: [{}]", username);
         user.setNome(dto.getNome());
@@ -68,10 +70,9 @@ public class UserService {
 
     public void updatePassword(String username, PasswordUpdateRequest request) {
         logger.info("Updating password for username: {}", username);
-        User user = userRepository.findByUsername(username).orElseThrow(() -> {
-            logger.warn("User not found for username: {}", username);
-            return new RuntimeException("User not found");
-        });
+        User user = userRepository.findByUsername(username);
+
+        if(user ==  null) throw new ResourceNotFoundException("error.not.found");
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             logger.error("Old password is incorrect for username: {}", username);

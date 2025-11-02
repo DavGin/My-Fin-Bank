@@ -19,9 +19,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Recupera l'utente dal repository
-        User user = repo.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Utente con " + username + " non trovato"));
-
+        User user = repo.findByUsername(username);
+        if(user == null) throw new UsernameNotFoundException(username);
         // Verifica che il ruolo esista
         if (user.getRuolo() == null) {
             throw new IllegalStateException("L'utente non ha ruoli associati.");
@@ -37,7 +36,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities(authorities) // Ruoli
-                .disabled(!user.getEnabled()) // Controlla se è disabilitato
+                .disabled(user.getStato().equals("ATTIVO") ? false : true) // Controlla se è disabilitato
                 .build();
     }
 
