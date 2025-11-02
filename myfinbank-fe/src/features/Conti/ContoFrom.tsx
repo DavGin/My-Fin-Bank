@@ -7,7 +7,6 @@ import {
     Button,
     MenuItem,
     TextField,
-    Typography,
     Alert,
 } from '@mui/material'
 
@@ -29,9 +28,6 @@ export default function ContoForm() {
 
     return (
         <Box sx={{ maxWidth: 400, mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-                Crea un nuovo conto
-            </Typography>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <TextField
                     select
