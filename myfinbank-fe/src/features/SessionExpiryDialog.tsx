@@ -7,16 +7,13 @@ type Props = {
     onLogout: () => void;
 };
 
-export default function SessionExpiryDialog({ open, secondsLeft, onRefresh, onLogout }: Props) {
+export default function SessionExpiryDialog({ open, onRefresh, onLogout }: Props) {
     return (
         <Dialog open={open}>
-            <DialogTitle>Sessione in scadenza</DialogTitle>
+            <DialogTitle>Sessione scaduta</DialogTitle>
             <DialogContent>
-                <Typography>
-                    La tua sessione scadrà tra {secondsLeft ? Math.max(0, Math.round(secondsLeft)) : 'alcuni'} secondi.
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Vuoi rinnovare la sessione per continuare?
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, boxSizing:20 }}>
+                    Rinnovare per continuare?
                 </Typography>
             </DialogContent>
             <DialogActions>

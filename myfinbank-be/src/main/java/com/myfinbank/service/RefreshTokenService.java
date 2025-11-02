@@ -7,6 +7,7 @@ import com.myfinbank.repository.RefreshTokenRepository;
 import com.myfinbank.repository.UserRepository;
 import com.myfinbank.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +39,8 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken createRefreshToken(String username, String refreshToken) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("error.not.found"));
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new ResourceNotFoundException("error.not.found");
         Date now = new Date();
         Date expiry = new Date(now.getTime() + refreshTokenValidityMs);
         RefreshToken token = new RefreshToken();

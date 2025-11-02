@@ -3,12 +3,13 @@ import { useSelector } from 'react-redux';
 import SessionExpiryDialog from './SessionExpiryDialog';
 import { useAppDispatch } from "../app/hooks.ts";
 import type { RootState } from "../app/store.ts";
-import { setAccessToken } from "./auth/authSlice.ts";
+import {setAccessToken, setSessionSecondsLeft} from "./auth/authSlice.ts";
 import { getExpiryTimestamp } from "../utils/jwt.ts";
 import {useNavigate} from "react-router-dom";
 import {performLogout, refreshToken} from "../api/axiosClient.ts";
+import {queryClient} from "../queryClient.ts";
 
-const EXPIRE_WARNING_MS = 60 * 1000; // mostra avviso quando mancano 60s
+const EXPIRE_WARNING_MS = 10 * 1000; // mostra avviso quando mancano 60s
 const POLL_INTERVAL = 1000; // controllo ogni 1s per countdown
 
 export default function SessionManager() {
@@ -63,12 +64,14 @@ export default function SessionManager() {
 
         const interval = setInterval(tick, POLL_INTERVAL);
         tick();
-
+        if (secondsLeft !== null) {
+            dispatch(setSessionSecondsLeft(secondsLeft));
+        }
         return () => {
             mounted = false;
             clearInterval(interval);
         };
-    }, [expiryTs]);
+    }, [expiryTs, secondsLeft, dispatch]);
 
 
     const attemptAutoRefresh = async () => {
@@ -96,6 +99,9 @@ export default function SessionManager() {
         console.log('[SessionManager] L’utente ha cliccato "Continua".');
         setOpen(false);
         await attemptAutoRefresh();
+        queryClient.refetchQueries({ queryKey: ['conti'] });
+        queryClient.refetchQueries({ queryKey: ['listaTransazioni'] });
+        queryClient.refetchQueries({ queryKey: ['finanziamenti'] });
     };
 
     const handleLogout = async () => {

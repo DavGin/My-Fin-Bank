@@ -1,45 +1,64 @@
 package com.myfinbank.dto;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 public class RegisterRequest {
 
-    @NotBlank
-    private String username;
-
-    @Email
-    @NotBlank
+    @Pattern(
+            regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+            message = "Inserire un'email valida"
+    )
+    @NotNull
     private String email;
 
-    @NotBlank
-    @Size(min = 6, max = 128)
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{6,128}$",
-            message = "La password deve contenere almeno una maiuscola, una minuscola, un numero e un carattere speciale")
+    @NotNull(message = "La password è obbligatoria")
+    @Pattern(
+            regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
+            message = "La password deve contenere almeno 8 caratteri, una lettera maiuscola, una lettera minuscola, un numero e un carattere speciale"
+    )
     private String password;
 
-    @NotBlank
+    @NotNull(message = "Il nome è obbligatorio")
+    @Size(max = 50, message = "Il nome non può superare i 50 caratteri")
     private String nome;
 
-    @NotBlank
+    @NotNull(message = "Il cognome è obbligatorio")
+    @Size(max = 50, message = "Il cognome non può superare i 50 caratteri")
     private String cognome;
 
-    @NotBlank
-    @Pattern(regexp = "^[A-Z0-9]{16}$",
-            message = "Il codice fiscale deve contenere esattamente 16 caratteri alfanumerici"
+    @NotNull(message = "Username è obbligatorio")
+    @Size(max = 50, message = "Username non può superare i 10 caratteri")
+    private String username;
+
+
+    @NotNull(message = "Il codice fiscale è obbligatorio")
+    @Pattern(
+            regexp = "^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$",
+            message = "Il codice fiscale deve essere valido e rispettare il formato standard"
     )
     private String codiceFiscale;
 
-    @NotNull
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @NotNull(message = "La data di nascita è obbligatoria")
+    @Past(message = "La data di nascita deve essere passata")
+    @DateTimeFormat(pattern = "dd-MM-yyyy")
     private LocalDate dataNascita;
 
-    private Boolean isAdmin;
+    private String ruolo;
+
+    private LocalDateTime createdAt;
+
+    private String stato;
+
+    private LocalDate ultimoAccesso;
+
 
 }

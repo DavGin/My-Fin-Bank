@@ -1,16 +1,13 @@
 package com.myfinbank.entity;
-
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -50,9 +47,6 @@ public class User {
     @Column(name = "RUOLO")
     private String ruolo;
 
-    @Column(name = "ENABLED")
-    private Boolean enabled = true;
-
     @Column(name = "CREATED_AT")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -60,5 +54,15 @@ public class User {
     @NotNull
     @Column(name = "USERNAME", nullable = false, length = 100)
     private String username;
+
+    @Size(max = 20)
+    @NotNull
+    @Column(name = "STATO", nullable = false, length = 20)
+    private String stato;
+
+    @NotNull
+    @Column(name = "ULTIMO_ACCESSO", nullable = false)
+    private LocalDateTime ultimoAccesso;
+
 
 }
